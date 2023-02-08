@@ -34,12 +34,34 @@ export default class Sprite {
         var x = this.pos[0];
         var y = this.pos[1];
 
-        if (this.dir == 'vertical') {
-            y += frame * this.size[1];
+        switch (this.dir) {
+            case 'vertical':
+                y += frame * this.size[1];
+                break;
+            case 'UP':
+                x += frame * this.size[0];
+                y = this.size[1] * 3
+                break;
+            case 'DOWN':
+                x += frame * this.size[0];
+                y = this.size[1] * 2
+                break;
+            case 'LEFT':
+                x += frame * this.size[0];
+                y = this.size[1] * 1
+                break;
+                
+            default:
+                x += frame * this.size[0];
+                break;
         }
-        else {
-            x += frame * this.size[0];
-        }
+
+        // if (this.dir == 'vertical') {
+        //     y += frame * this.size[1];
+        // }
+        // else {
+        //     x += frame * this.size[0];
+        // }
 
         ctx.drawImage(resources.get(this.url),
             x, y,
@@ -48,7 +70,4 @@ export default class Sprite {
             this.size[0], this.size[1]);
     }
 
-    changeDirection(dir) {
-        this.dir = dir
-    }
 }

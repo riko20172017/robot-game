@@ -13,7 +13,8 @@ var lastTime;
 
 resources.load([
     'img/sprites.png',
-    'img/terrain.png'
+    'img/terrain.png',
+    'img/player.png'
 ]);
 resources.onReady(init);
 
@@ -112,16 +113,16 @@ function handleInput(dt) {
             dir: 'forward',
             sprite: new Sprite('img/sprites.png', [0, 39], [18, 8])
         });
-        bullets.push({
-            pos: [x, y],
-            dir: 'up',
-            sprite: new Sprite('img/sprites.png', [0, 50], [9, 5])
-        });
-        bullets.push({
-            pos: [x, y],
-            dir: 'down',
-            sprite: new Sprite('img/sprites.png', [0, 60], [9, 5])
-        });
+        // bullets.push({
+        //     pos: [x, y],
+        //     dir: 'up',
+        //     sprite: new Sprite('img/sprites.png', [0, 50], [9, 5])
+        // });
+        // bullets.push({
+        //     pos: [x, y],
+        //     dir: 'down',
+        //     sprite: new Sprite('img/sprites.png', [0, 60], [9, 5])
+        // });
 
         lastFire = Date.now();
     }

@@ -3,7 +3,7 @@ import Sprite from "../sprite.js";
 export default class Player {
     constructor(x, y) {
         this.pos = [x, y];
-        this.sprite = new Sprite('img/sprites.png', [0, 0], [39, 39], 16, [0, 1])
+        this.sprite = new Sprite('img/player.png', [0, 0], [39, 39], 16, [0, 1])
     }
 
     move(dir, delta) {
@@ -22,6 +22,10 @@ export default class Player {
                 break;
         }
 
-        this.sprite.changeDirection = dir
+        this.changeDirection(dir);
+    }
+
+    changeDirection(dir) {
+        this.sprite.dir = dir
     }
 }
