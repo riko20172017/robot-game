@@ -2,7 +2,7 @@ import Player from "./units/player.js";
 import Sprite from "./sprite.js";
 
 // Create the canvas
-var canvas = document.createElement("canvas");
+var canvas = document.getElementById('canvas');
 var ctx = canvas.getContext("2d");
 canvas.width = 512;
 canvas.height = 480;
@@ -69,14 +69,14 @@ function update(dt) {
 
     // It gets harder over time by adding enemies using this
     // equation: 1-.993^gameTime
-    if (Math.random() < 1 - Math.pow(.993, gameTime)) {
-        enemies.push({
-            pos: [canvas.width,
-            Math.random() * (canvas.height - 39)],
-            sprite: new Sprite('img/sprites.png', [0, 78], [80, 39],
-                6, [0, 1, 2, 3, 2, 1])
-        });
-    }
+    // if (Math.random() < 1 - Math.pow(.993, gameTime)) {
+    //     enemies.push({
+    //         pos: [canvas.width,
+    //         Math.random() * (canvas.height - 39)],
+    //         sprite: new Sprite('img/sprites.png', [0, 78], [80, 39],
+    //             6, [0, 1, 2, 3, 2, 1])
+    //     });
+    // }
 
     checkCollisions();
 
@@ -86,45 +86,75 @@ function update(dt) {
 function handleInput(dt) {
     let delta = playerSpeed * dt;
 
-    if (input.isDown('DOWN') || input.isDown('s')) {
-        player.move('DOWN', delta)
-    }
-
-    if (input.isDown('UP') || input.isDown('w')) {
-        player.move('UP', delta)
-    }
-
-    if (input.isDown('LEFT') || input.isDown('a')) {
-        player.move('LEFT', delta)
-    }
-
-    if (input.isDown('RIGHT') || input.isDown('d')) {
-        player.move('RIGHT', delta)
-    }
-
     if (input.isDown('SPACE') &&
         !isGameOver &&
         Date.now() - lastFire > 100) {
         var x = player.pos[0] + player.sprite.size[0] / 2;
         var y = player.pos[1] + player.sprite.size[1] / 2;
 
+        var mx = window.getMouse().x;
+        var my = window.getMouse().y;
+        var vx = mx - x;
+        var vy = my - y;
+
+        var dist = Math.sqrt(vx * vx + vy * vy);
+        var dx = vx / dist;
+        var dy = vy / dist;
+
+        var angle = Math.atan2(vx, vy);
+
         bullets.push({
             pos: [x, y],
-            dir: 'forward',
-            sprite: new Sprite('img/sprites.png', [0, 39], [18, 8])
+            way: [dx, dy],
+            dir: -angle + 1.5,
+            sprite: new Sprite('img/sprites.png', [0, 39], [18, 8], [0, 0], 10, angle)
         });
-        // bullets.push({
-        //     pos: [x, y],
-        //     dir: 'up',
-        //     sprite: new Sprite('img/sprites.png', [0, 50], [9, 5])
-        // });
-        // bullets.push({
-        //     pos: [x, y],
-        //     dir: 'down',
-        //     sprite: new Sprite('img/sprites.png', [0, 60], [9, 5])
-        // });
 
         lastFire = Date.now();
+    }
+
+    if (input.isDown('w') && input.isDown('d')) {
+        player.move('UP-RIGHT', delta)
+        return
+    }
+
+    if (input.isDown('w') && input.isDown('a')) {
+        player.move('UP-LEFT', delta)
+        return
+    }
+
+    if (input.isDown('s') && input.isDown('d')) {
+        player.move('DOWN-RIGHT', delta)
+        return
+    }
+
+    if (input.isDown('s') && input.isDown('a')) {
+        player.move('DOWN-LEFT', delta)
+        return
+    }
+
+    if (input.isDown('s')) {
+        player.move('DOWN', delta)
+        return
+    }
+
+    if (input.isDown('d')) {
+        player.move('RIGHT', delta)
+        return
+    }
+
+    if (input.isDown('w')) {
+        player.move('UP', delta)
+        return
+    }
+
+    if (input.isDown('a')) {
+        player.move('LEFT', delta)
+        return
+    }
+
+    if (input.isDown('d')) {
+        player.move('RIGHT', delta)
     }
 }
 
@@ -136,12 +166,11 @@ function updateEntities(dt) {
     for (var i = 0; i < bullets.length; i++) {
         var bullet = bullets[i];
 
-        switch (bullet.dir) {
-            case 'up': bullet.pos[1] -= bulletSpeed * dt; break;
-            case 'down': bullet.pos[1] += bulletSpeed * dt; break;
-            default:
-                bullet.pos[0] += bulletSpeed * dt;
-        }
+        // bullet.pos[0] += bulletSpeed * dt * (- 1);
+        bullet.pos[0] += bulletSpeed * dt * (bullet.way[0]);
+        bullet.pos[1] += bulletSpeed * dt * (bullet.way[1]);
+
+
 
         // Remove the bullet if it goes offscreen
         if (bullet.pos[1] < 0 || bullet.pos[1] > canvas.height ||
@@ -274,6 +303,7 @@ function renderEntities(list) {
 function renderEntity(entity) {
     ctx.save();
     ctx.translate(entity.pos[0], entity.pos[1]);
+    ctx.rotate(entity.dir)
     entity.sprite.render(ctx);
     ctx.restore();
 }

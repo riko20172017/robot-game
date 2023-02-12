@@ -35,8 +35,9 @@ export default class Sprite {
         var y = this.pos[1];
 
         switch (this.dir) {
-            case 'vertical':
-                y += frame * this.size[1];
+            case 'RIGHT':
+                x += frame * this.size[0];
+                y = this.size[1] * 0;
                 break;
             case 'UP':
                 x += frame * this.size[0];
@@ -50,7 +51,22 @@ export default class Sprite {
                 x += frame * this.size[0];
                 y = this.size[1] * 1
                 break;
-                
+            case 'UP-RIGHT':
+                x += frame * this.size[0];
+                y = this.size[1] * 5
+                break;
+            case 'UP-LEFT':
+                x += frame * this.size[0];
+                y = this.size[1] * 6
+                break;
+            case 'DOWN-LEFT':
+                x += frame * this.size[0];
+                y = this.size[1] * 7
+                break;
+            case 'DOWN-RIGHT':
+                x += frame * this.size[0];
+                y = this.size[1] * 4
+                break;
             default:
                 x += frame * this.size[0];
                 break;
@@ -63,11 +79,21 @@ export default class Sprite {
         //     x += frame * this.size[0];
         // }
 
+      //  if (typeof this.dir == 'number') {
+            // ctx.save()
+            // ctx.rotate(this.dir)
+
+      //  }
+
         ctx.drawImage(resources.get(this.url),
             x, y,
             this.size[0], this.size[1],
             0, 0,
             this.size[0], this.size[1]);
+        // if (typeof dir == 'number') {
+        //     this.dir = 0;
+
+        // }
     }
 
 }
