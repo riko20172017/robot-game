@@ -1,7 +1,7 @@
 
 (function () {
     var pressedKeys = { left: false, up: false, right: false, down: false, space: false };
-    var mouse = { x:0, y:0 };
+    var mouse = { x: 0, y: 0 };
 
     function setKey(event, status) {
         var code = event.keyCode;
@@ -38,11 +38,10 @@
         pressedKeys = {};
     });
 
-    window.input = {
-        isDown: function (key) {
-            return pressedKeys[key.toUpperCase()];
-        }
-    };
+    window.input = function (key) {
+        return pressedKeys;
+    }
+
 
     const canvas = document.getElementById('canvas');
     // We can use our function with a canvas event

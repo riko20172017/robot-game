@@ -37,15 +37,28 @@ var playerSpeed = 200;
 var bulletSpeed = 500;
 var enemySpeed = 100;
 
+var socket = io();
+
+socket.emit('new player');
+
+socket.on('state', function(data) {
+    player.pos[0] = data.x;
+    player.pos[1] = data.y
+});
+
 function main() {
+
+
     var now = Date.now();
     var dt = (now - lastTime) / 1000.0;
 
-    update(dt);
+    // update(dt);
     render();
 
     lastTime = now;
     requestAnimationFrame(main);
+    
+    socket.emit('movement', window.input());
 };
 
 function init() {
@@ -326,5 +339,5 @@ function reset() {
     enemies = [];
     bullets = [];
 
-    player.pos = [50, canvas.height / 2];
+    // player.pos = [50, canvas.height / 2];
 };
