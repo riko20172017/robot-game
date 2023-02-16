@@ -14,7 +14,7 @@ var lastTime;
 resources.load([
     'img/sprites.png',
     'img/terrain.png',
-    'img/player.png'
+    'img/player.png',
 ]);
 resources.onReady(init);
 
