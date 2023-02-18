@@ -29,25 +29,42 @@ io.on('connection', function (socket) {
         //     x: 150,
         //     y: 150
         // };
+        io.sockets.emit('state', player);
     });
+
+    var lastUpdateTime = (new Date()).getTime();
 
     socket.on('movement', function (data) {
+        var currentTime = (new Date()).getTime();
+        var timeDifference = currentTime - lastUpdateTime;
         // var player = players[socket.id] || {};
-        if (data.A) {
-            player.x -= 5;
+        console.log(timeDifference);
+        if (timeDifference > 500) {
+            if (data.A) {
+                player.x -= 5;
+            }
+            if (data.W) {
+                player.y -= 5;
+            }
+            if (data.D) {
+                player.x += 5;
+            }
+            if (data.S) {
+                player.y += 5;
+            }
+
+            lastUpdateTime = currentTime
+
+            io.sockets.emit('state', player);
         }
-        if (data.W) {
-            player.y -= 5;
-        }
-        if (data.D) {
-            player.x += 5;
-        }
-        if (data.S) {
-            player.y += 5;
-        }
+
+
+
+
     });
+
 });
 
-setInterval(function () {
-    io.sockets.emit('state', player);
-}, 1000 / 60);
+// setInterval(function () {
+//     io.sockets.emit('state', player);
+// }, 1000 / 60);

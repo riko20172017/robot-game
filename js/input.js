@@ -1,5 +1,7 @@
 
 (function () {
+    var socket = io();
+
     var pressedKeys = { left: false, up: false, right: false, down: false, space: false };
     var mouse = { x: 0, y: 0 };
 
@@ -28,6 +30,7 @@
 
     document.addEventListener('keydown', function (e) {
         setKey(e, true);
+        socket.emit('movement', window.input());
     });
 
     document.addEventListener('keyup', function (e) {

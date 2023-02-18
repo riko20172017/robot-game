@@ -58,7 +58,6 @@ function main() {
     lastTime = now;
     requestAnimationFrame(main);
     
-    socket.emit('movement', window.input());
 };
 
 function init() {
