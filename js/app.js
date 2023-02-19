@@ -54,6 +54,7 @@ socket.on('new player', function (data) {
 socket.on('state', function (data) {
     players[data.id].pos[0] = data.x;
     players[data.id].pos[1] = data.y
+    players[data.id].changeDirection(data.dir)
 });
 
 function main() {
