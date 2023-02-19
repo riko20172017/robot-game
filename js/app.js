@@ -19,7 +19,7 @@ resources.load([
 resources.onReady(init);
 
 // Game state
-var player = new Player(0, 0);
+var players = {};
 var bullets = [];
 var enemies = [];
 var explosions = [];
@@ -41,13 +41,22 @@ var socket = io();
 
 socket.emit('new player');
 
-socket.on('state', function(data) {
-    player.pos[0] = data.x;
-    player.pos[1] = data.y
+socket.on('new player', function (data) {
+    players = {};
+    for (const id in data) {
+        if (Object.hasOwnProperty.call(data, id)) {
+            const player = data[id];
+            players[id] = new Player(player.id, player.x, player.y);
+        }
+    }
+});
+
+socket.on('state', function (data) {
+    players[data.id].pos[0] = data.x;
+    players[data.id].pos[1] = data.y
 });
 
 function main() {
-
 
     var now = Date.now();
     var dt = (now - lastTime) / 1000.0;
@@ -55,9 +64,18 @@ function main() {
     // update(dt);
     render();
 
+    if (window.input().A || window.input().D || window.input().S || window.input().W) {
+        socket.emit('movement', window.input());
+    }
+    // socket.emit('movement', { A: false, W: false, D: true, S: false, space: false });
+
     lastTime = now;
+    // socket.emit('movement', window.input());
+
+
+
     requestAnimationFrame(main);
-    
+
 };
 
 function init() {
@@ -298,7 +316,11 @@ function render() {
 
     // Render the player if the game isn't over
     if (!isGameOver) {
-        renderEntity(player);
+        for (const id in players) {
+            if (Object.hasOwnProperty.call(players, id)) {
+                renderEntity(players[id]);
+            }
+        }
     }
 
     renderEntities(bullets);
