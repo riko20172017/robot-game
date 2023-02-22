@@ -52,21 +52,39 @@ socket.on('new player', function (data) {
 });
 
 socket.on('state', function (data) {
-    players[data.id].pos[0] = data.x;
-    players[data.id].pos[1] = data.y
-    players[data.id].changeDirection(data.dir)
-});
+
+    if (data?.id) {
+        players[data.id].pos[0] = data.x;
+        players[data.id].pos[1] = data.y
+        players[data.id].changeDirection(data.dir)
+    }
+
+    if (data?.bullet) {
+        bullets.push({
+            ...data.bullet,
+            sprite: new Sprite('img/sprites.png', [0, 39], [18, 8], [0, 0], 10, data.bullet.dir)
+        })
+    }
+
+})
+
 
 function main() {
 
     var now = Date.now();
     var dt = (now - lastTime) / 1000.0;
 
-    // update(dt);
+    update(dt);
     render();
 
-    if (window.input().A || window.input().D || window.input().S || window.input().W) {
-        socket.emit('movement', window.input());
+    if (
+        window.inputManual().A ||
+        window.inputManual().D ||
+        window.inputManual().S ||
+        window.inputManual().W ||
+        window.inputManual().SPACE
+    ) {
+        socket.emit('movement', window.window.inputManual());
     }
     // socket.emit('movement', { A: false, W: false, D: true, S: false, space: false });
 
@@ -109,40 +127,41 @@ function update(dt) {
     //     });
     // }
 
-    checkCollisions();
+    // checkCollisions();
 
     scoreEl.innerHTML = score;
 };
 
 function handleInput(dt) {
+    const player = players[socket.id]
     let delta = playerSpeed * dt;
 
-    if (input.isDown('SPACE') &&
-        !isGameOver &&
-        Date.now() - lastFire > 100) {
-        var x = player.pos[0] + player.sprite.size[0] / 2;
-        var y = player.pos[1] + player.sprite.size[1] / 2;
+    // if (input.isDown('SPACE') &&
+    //     !isGameOver &&
+    //     Date.now() - lastFire > 100) {
+    //     var x = player.pos[0] + player.sprite.size[0] / 2;
+    //     var y = player.pos[1] + player.sprite.size[1] / 2;
 
-        var mx = window.getMouse().x;
-        var my = window.getMouse().y;
-        var vx = mx - x;
-        var vy = my - y;
+    //     var mx = window.getMouse().x;
+    //     var my = window.getMouse().y;
+    //     var vx = mx - x;
+    //     var vy = my - y;
 
-        var dist = Math.sqrt(vx * vx + vy * vy);
-        var dx = vx / dist;
-        var dy = vy / dist;
+    //     var dist = Math.sqrt(vx * vx + vy * vy);
+    //     var dx = vx / dist;
+    //     var dy = vy / dist;
 
-        var angle = Math.atan2(vx, vy);
+    //     var angle = Math.atan2(vx, vy);
 
-        bullets.push({
-            pos: [x, y],
-            way: [dx, dy],
-            dir: -angle + 1.5,
-            sprite: new Sprite('img/sprites.png', [0, 39], [18, 8], [0, 0], 10, angle)
-        });
+    //     bullets.push({
+    //         pos: [x, y],
+    //         way: [dx, dy],
+    //         dir: -angle + 1.5,
+    //         sprite: new Sprite('img/sprites.png', [0, 39], [18, 8], [0, 0], 10, angle)
+    //     });
 
-        lastFire = Date.now();
-    }
+    //     lastFire = Date.now();
+    // }
 
     if (input.isDown('w') && input.isDown('d')) {
         player.move('UP-RIGHT', delta)
@@ -191,7 +210,13 @@ function handleInput(dt) {
 
 function updateEntities(dt) {
     // Update the player sprite animation
-    player.sprite.update(dt);
+    for (const key in players) {
+        if (Object.hasOwnProperty.call(players, key)) {
+            const player = players[key];
+            player.sprite.update(dt);
+
+        }
+    }
 
     // Update all the bullets
     for (var i = 0; i < bullets.length; i++) {

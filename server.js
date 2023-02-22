@@ -21,6 +21,8 @@ server.listen(5000, function () {
 });
 
 var players = {}
+var bullets = []
+var lastFire = Date.now();
 
 io.on('connection', function (socket) {
 
@@ -69,6 +71,34 @@ function randomInteger(min, max) {
 }
 
 function handleInput(player, data) {
+
+    if (data.SPACE && Date.now() - lastFire > 100) {
+        var x = player.x;
+        var y = player.y;
+
+        var mx = data.mouse.x;
+        var my = data.mouse.y;
+        var vx = mx - x;
+        var vy = my - y;
+
+        var dist = Math.sqrt(vx * vx + vy * vy);
+        var dx = vx / dist;
+        var dy = vy / dist;
+
+        var angle = Math.atan2(vx, vy);
+
+        const bullet = {
+            pos: [x, y],
+            way: [dx, dy],
+            dir: -angle + 1.5,
+        }
+
+        bullets.push({ ...bullet });
+
+        lastFire = Date.now();
+
+        return { ...player, bullet: { ...bullet } }
+    }
 
     if (data.W && data.D) {
         player.y -= 5;
