@@ -22,6 +22,8 @@ server.listen(5000, function () {
 
 var players = {}
 var bullets = []
+var playerSpeed = 200;
+var bulletSpeed = 500;
 var lastFire = Date.now();
 
 io.on('connection', function (socket) {
@@ -53,6 +55,11 @@ io.on('connection', function (socket) {
     })
 
 });
+
+setInterval(() => {
+    update()
+
+}, 1000 / 60);
 
 // setInterval(function () {
 //     io.sockets.emit('state', player);
@@ -151,4 +158,92 @@ function handleInput(player, data) {
         player.dir = 'RIGHT'
         return player
     }
+}
+
+function update(params) {
+    updateEntities()
+    checkCollisions();
+}
+
+function updateEntities() {
+    // Update all the bullets
+    for (var i = 0; i < bullets.length; i++) {
+        var bullet = bullets[i];
+
+        // bullet.pos[0] += bulletSpeed * dt * (- 1);
+        bullet.pos[0] += bulletSpeed * (bullet.way[0]);
+        bullet.pos[1] += bulletSpeed * (bullet.way[1]);
+
+
+
+        // Remove the bullet if it goes offscreen
+        if (bullet.pos[1] < 0 || bullet.pos[1] > 480 ||
+            bullet.pos[0] > 580) {
+            bullets.splice(i, 1);
+            i--;
+        }
+    }
+}
+
+function checkCollisions() {
+    checkPlayerBounds();
+
+    // Run collision detection for all enemies and bullets
+
+    for (const key in players) {
+        if (Object.hasOwnProperty.call(players, key)) {
+            const player = players[key];
+            var pos = [player.x, player.y];
+            var size = [39, 39];
+
+            for (var j = 0; j < bullets.length; j++) {
+                var pos2 = bullets[j].pos;
+                var size2 = [18, 8];
+
+                if (boxCollides(pos, size, pos2, size2)) {
+                    // Remove the enemy
+                    delete player[key];
+
+                    io.sockets.emit('state', player);
+
+                    // Add an explosion
+                    explosions.push({
+                        pos: pos,
+                        sprite: new Sprite('img/sprites.png',
+                            [0, 117],
+                            [39, 39],
+                            16,
+                            [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+                            null,
+                            true)
+                    });
+
+                    // Remove the bullet and stop this iteration
+                    bullets.splice(j, 1);
+                    break;
+                }
+            }
+
+
+        }
+    }
+
+
+    // if (boxCollides(pos, size, player.pos, player.sprite.size)) {
+    //     gameOver();
+    // }
+}
+
+// Collisions
+
+function collides(x, y, r, b, x2, y2, r2, b2) {
+    return !(r <= x2 || x > r2 ||
+        b <= y2 || y > b2);
+}
+
+function boxCollides(pos, size, pos2, size2) {
+    return collides(pos[0], pos[1],
+        pos[0] + size[0], pos[1] + size[1],
+        pos2[0], pos2[1],
+        pos2[0] + size2[0], pos2[1] + size2[1]);
 }

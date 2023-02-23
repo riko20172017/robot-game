@@ -68,7 +68,6 @@ socket.on('state', function (data) {
 
 })
 
-
 function main() {
 
     var now = Date.now();
