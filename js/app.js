@@ -68,6 +68,21 @@ socket.on('state', function (data) {
 
 })
 
+socket.on('explosions', function (data) {
+    delete players[data.id]
+    explosions.push({
+        pos: [data.x, data.y],
+        sprite: new Sprite('img/sprites.png',
+            [0, 117],
+            [39, 39],
+            16,
+            [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+            null,
+            true)
+    });
+
+})
+
 function main() {
 
     var now = Date.now();
@@ -85,12 +100,8 @@ function main() {
     ) {
         socket.emit('movement', window.window.inputManual());
     }
-    // socket.emit('movement', { A: false, W: false, D: true, S: false, space: false });
 
     lastTime = now;
-    // socket.emit('movement', window.input());
-
-
 
     requestAnimationFrame(main);
 
@@ -115,52 +126,12 @@ function update(dt) {
     handleInput(dt);
     updateEntities(dt);
 
-    // It gets harder over time by adding enemies using this
-    // equation: 1-.993^gameTime
-    // if (Math.random() < 1 - Math.pow(.993, gameTime)) {
-    //     enemies.push({
-    //         pos: [canvas.width,
-    //         Math.random() * (canvas.height - 39)],
-    //         sprite: new Sprite('img/sprites.png', [0, 78], [80, 39],
-    //             6, [0, 1, 2, 3, 2, 1])
-    //     });
-    // }
-
-    // checkCollisions();
-
     scoreEl.innerHTML = score;
 };
 
 function handleInput(dt) {
     const player = players[socket.id]
     let delta = playerSpeed * dt;
-
-    // if (input.isDown('SPACE') &&
-    //     !isGameOver &&
-    //     Date.now() - lastFire > 100) {
-    //     var x = player.pos[0] + player.sprite.size[0] / 2;
-    //     var y = player.pos[1] + player.sprite.size[1] / 2;
-
-    //     var mx = window.getMouse().x;
-    //     var my = window.getMouse().y;
-    //     var vx = mx - x;
-    //     var vy = my - y;
-
-    //     var dist = Math.sqrt(vx * vx + vy * vy);
-    //     var dx = vx / dist;
-    //     var dy = vy / dist;
-
-    //     var angle = Math.atan2(vx, vy);
-
-    //     bullets.push({
-    //         pos: [x, y],
-    //         way: [dx, dy],
-    //         dir: -angle + 1.5,
-    //         sprite: new Sprite('img/sprites.png', [0, 39], [18, 8], [0, 0], 10, angle)
-    //     });
-
-    //     lastFire = Date.now();
-    // }
 
     if (input.isDown('w') && input.isDown('d')) {
         player.move('UP-RIGHT', delta)
