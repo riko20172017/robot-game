@@ -1,5 +1,6 @@
 .#*
 .DS_Store
+node_modules/*
 node_modules/.package-lock.json
 node_modules/.bin/mime
 node_modules/.bin/mime.cmd

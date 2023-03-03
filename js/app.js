@@ -23,6 +23,7 @@ var players = {};
 var bullets = [];
 var enemies = [];
 var explosions = [];
+var playerId;
 
 var lastFire = Date.now();
 var gameTime = 0;
@@ -43,12 +44,14 @@ socket.emit('new player');
 
 socket.on('new player', function (data) {
     players = {};
-    for (const id in data) {
-        if (Object.hasOwnProperty.call(data, id)) {
-            const player = data[id];
-            players[id] = new Player(player.id, player.x, player.y);
+    for (const key in data) {
+        if (Object.hasOwnProperty.call(data, key)) {
+            const player = data[key];
+            players[key] = new Player(player.id, player.x, player.y);
         }
     }
+    console.log(players);
+
 });
 
 socket.on('state', function (data) {
@@ -69,9 +72,10 @@ socket.on('state', function (data) {
 })
 
 socket.on('explosions', function (data) {
-    delete players[data.id]
+    delete players[data.player.id]
+    bullets.splice(data.bulletKey, 1);
     explosions.push({
-        pos: [data.x, data.y],
+        pos: [data.player.x, data.player.y],
         sprite: new Sprite('img/sprites.png',
             [0, 117],
             [39, 39],
@@ -226,64 +230,6 @@ function updateEntities(dt) {
         if (explosions[i].sprite.done) {
             explosions.splice(i, 1);
             i--;
-        }
-    }
-}
-
-// Collisions
-
-function collides(x, y, r, b, x2, y2, r2, b2) {
-    return !(r <= x2 || x > r2 ||
-        b <= y2 || y > b2);
-}
-
-function boxCollides(pos, size, pos2, size2) {
-    return collides(pos[0], pos[1],
-        pos[0] + size[0], pos[1] + size[1],
-        pos2[0], pos2[1],
-        pos2[0] + size2[0], pos2[1] + size2[1]);
-}
-
-function checkCollisions() {
-    checkPlayerBounds();
-
-    // Run collision detection for all enemies and bullets
-    for (var i = 0; i < enemies.length; i++) {
-        var pos = enemies[i].pos;
-        var size = enemies[i].sprite.size;
-
-        for (var j = 0; j < bullets.length; j++) {
-            var pos2 = bullets[j].pos;
-            var size2 = bullets[j].sprite.size;
-
-            if (boxCollides(pos, size, pos2, size2)) {
-                // Remove the enemy
-                enemies.splice(i, 1);
-                i--;
-
-                // Add score
-                score += 100;
-
-                // Add an explosion
-                explosions.push({
-                    pos: pos,
-                    sprite: new Sprite('img/sprites.png',
-                        [0, 117],
-                        [39, 39],
-                        16,
-                        [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
-                        null,
-                        true)
-                });
-
-                // Remove the bullet and stop this iteration
-                bullets.splice(j, 1);
-                break;
-            }
-        }
-
-        if (boxCollides(pos, size, player.pos, player.sprite.size)) {
-            gameOver();
         }
     }
 }

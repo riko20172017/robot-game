@@ -1,11 +1,18 @@
 // Зависимости
-var express = require('express');
-var http = require('http');
-var path = require('path');
-var socketIO = require('socket.io');
+import express from 'express';
+import { createServer } from "http";
+import path from 'path';
+import { Server } from "socket.io";
+import { uid } from 'uid'
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 var app = express();
-var server = http.Server(app);
-var io = socketIO(server);
+var httpServer = createServer(app);
+var io = new Server(httpServer);
+
 
 app.set('port', 5000);
 app.use('/', express.static(__dirname + '/'));
@@ -16,7 +23,7 @@ app.get('/', function (request, response) {
 });
 
 // Запуск сервера
-server.listen(5000, function () {
+httpServer.listen(5000, function () {
     console.log('Запускаю сервер на порте 5000');
 });
 
@@ -31,9 +38,9 @@ var gameTime = 0;
 io.on('connection', function (socket) {
 
     socket.on('new player', function () {
-        players[socket.id] = { id: socket.id, x: randomInteger(10, 500), y: randomInteger(10, 400), dir: "LEFT" }
+        var id = uid()
+        players[id] = { id, x: randomInteger(10, 500), y: randomInteger(10, 400), dir: "LEFT" }
         io.sockets.emit('new player', players);
-        console.log( players );
     });
 
     var lastUpdateTime = (new Date()).getTime();
@@ -88,8 +95,8 @@ function randomInteger(min, max) {
 function handleInput(player, data) {
 
     if (data.SPACE && Date.now() - lastFire > 300) {
-        var x = player.x;
-        var y = player.y;
+        var x = player.x + 19;
+        var y = player.y + 19;
 
         var mx = data.mouse.x;
         var my = data.mouse.y;
@@ -103,7 +110,9 @@ function handleInput(player, data) {
         var angle = Math.atan2(vx, vy);
 
         const bullet = {
-            pos: [x + (dx > 0 ? 40: -20), y + (dy > 0 ? 40: -20)],
+            id: randomInteger(1000, 10000),
+            playerId: player.id,
+            pos: [x, y],
             way: [dx, dy],
             dir: -angle + 1.5,
         }
@@ -206,39 +215,23 @@ function checkCollisions() {
             var pos = [player.x, player.y];
             var size = [39, 39];
 
+
             for (var j = 0; j < bullets.length; j++) {
                 var pos2 = bullets[j].pos;
                 var size2 = [18, 8];
+                if (bullets[j].playerId !== player.id) {
+                    if (boxCollides(pos, size, pos2, size2)) {
+                        // Remove the enemy
+                        delete players[key];
+                        io.sockets.emit('explosions', { player, bulletKey: j });
 
-                var px = player.x;
-                var py = player.y;
-                var bx = pos2[0];
-                var by = pos2[1];
-                var vx = px - bx;
-                var vy = py - by;
+                        // Remove the bullet and stop this iteration
+                        bullets.splice(j, 1);
 
-
-                var dist = Math.sqrt(vx * vx + vy * vy);
-                var dx = vx / dist;
-                var dy = vy / dist;
-
-                var angle = Math.atan2(vx, vy);
-
-                if (boxCollides(pos, size, pos2, size2)) {
-                    // Remove the enemy
-                    delete players[key];
-                    io.sockets.emit('explosions', player);
-
-                    // Remove the bullet and stop this iteration
-                    bullets.splice(j, 1);
-
-                    console.log(players);
-
-                    break;
+                        break;
+                    }
                 }
             }
-
-
         }
     }
 
