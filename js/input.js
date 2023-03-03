@@ -1,7 +1,7 @@
 
 (function () {
-    var pressedKeys = { left: false, up: false, right: false, down: false, space: false };
-    var mouse = { x:0, y:0 };
+    var pressedKeys = {};
+    var mouse = { x: 0, y: 0 };
 
     function setKey(event, status) {
         var code = event.keyCode;
@@ -44,6 +44,10 @@
         }
     };
 
+    window.inputManual = function (key) {
+        return { ...pressedKeys, mouse: { ...window.getMouse() } };
+    }
+
     const canvas = document.getElementById('canvas');
     // We can use our function with a canvas event
     // canvas.addEventListener('mousemove', event => {
@@ -59,5 +63,4 @@
     window.getMouse = function () {
         return { x: mouse.x, y: mouse.y };
     }
-
 })();
