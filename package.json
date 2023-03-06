@@ -1,0 +1,26 @@
+{
+  "type": "module",
+  "name": "canvas-game-bootstrap",
+  "version": "1.0.0",
+  "description": "A simple starting point for writing 2d games. See tutorial.md for more information.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/riko20172017/robot-game.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/riko20172017/robot-game/issues"
+  },
+  "homepage": "https://github.com/riko20172017/robot-game#readme",
+  "dependencies": {
+    "express": "^4.18.2",
+    "socket.io": "^4.6.0",
+    "uid": "^2.0.1"
+  }
+  
+}

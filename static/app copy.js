@@ -19,11 +19,10 @@ resources.load([
 resources.onReady(init);
 
 // Game state
-var players = {};
+var player = new Player(0, 0);
 var bullets = [];
 var enemies = [];
 var explosions = [];
-var playerId;
 
 var lastFire = Date.now();
 var gameTime = 0;
@@ -38,77 +37,15 @@ var playerSpeed = 200;
 var bulletSpeed = 500;
 var enemySpeed = 100;
 
-var socket = io();
-
-socket.emit('new player');
-
-socket.on('new player', function (data) {
-    players = {};
-    for (const key in data) {
-        if (Object.hasOwnProperty.call(data, key)) {
-            const player = data[key];
-            players[key] = new Player(player.id, player.x, player.y);
-        }
-    }
-    console.log(players);
-
-});
-
-socket.on('state', function (data) {
-
-    if (data?.id) {
-        players[data.id].pos[0] = data.x;
-        players[data.id].pos[1] = data.y
-        players[data.id].changeDirection(data.dir)
-    }
-
-    if (data?.bullet) {
-        bullets.push({
-            ...data.bullet,
-            sprite: new Sprite('img/sprites.png', [0, 39], [18, 8], [0, 0], 10, data.bullet.dir)
-        })
-    }
-
-})
-
-socket.on('explosions', function (data) {
-    delete players[data.player.id]
-    bullets.splice(data.bulletKey, 1);
-    explosions.push({
-        pos: [data.player.x, data.player.y],
-        sprite: new Sprite('img/sprites.png',
-            [0, 117],
-            [39, 39],
-            16,
-            [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
-            null,
-            true)
-    });
-
-})
-
 function main() {
-
     var now = Date.now();
     var dt = (now - lastTime) / 1000.0;
 
     update(dt);
     render();
 
-    if (
-        window.inputManual().A ||
-        window.inputManual().D ||
-        window.inputManual().S ||
-        window.inputManual().W ||
-        window.inputManual().SPACE
-    ) {
-        socket.emit('movement', window.window.inputManual());
-    }
-
     lastTime = now;
-
     requestAnimationFrame(main);
-
 };
 
 function init() {
@@ -130,12 +67,51 @@ function update(dt) {
     handleInput(dt);
     updateEntities(dt);
 
+    // It gets harder over time by adding enemies using this
+    // equation: 1-.993^gameTime
+    // if (Math.random() < 1 - Math.pow(.993, gameTime)) {
+    //     enemies.push({
+    //         pos: [canvas.width,
+    //         Math.random() * (canvas.height - 39)],
+    //         sprite: new Sprite('img/sprites.png', [0, 78], [80, 39],
+    //             6, [0, 1, 2, 3, 2, 1])
+    //     });
+    // }
+
+    checkCollisions();
+
     scoreEl.innerHTML = score;
 };
 
 function handleInput(dt) {
-    const player = players[socket.id]
     let delta = playerSpeed * dt;
+
+    if (input.isDown('SPACE') &&
+        !isGameOver &&
+        Date.now() - lastFire > 100) {
+        var x = player.pos[0] + player.sprite.size[0] / 2;
+        var y = player.pos[1] + player.sprite.size[1] / 2;
+
+        var mx = window.getMouse().x;
+        var my = window.getMouse().y;
+        var vx = mx - x;
+        var vy = my - y;
+
+        var dist = Math.sqrt(vx * vx + vy * vy);
+        var dx = vx / dist;
+        var dy = vy / dist;
+
+        var angle = Math.atan2(vx, vy);
+
+        bullets.push({
+            pos: [x, y],
+            way: [dx, dy],
+            dir: -angle + 1.5,
+            sprite: new Sprite('img/sprites.png', [0, 39], [18, 8], [0, 0], 10, angle)
+        });
+
+        lastFire = Date.now();
+    }
 
     if (input.isDown('w') && input.isDown('d')) {
         player.move('UP-RIGHT', delta)
@@ -184,13 +160,7 @@ function handleInput(dt) {
 
 function updateEntities(dt) {
     // Update the player sprite animation
-    for (const key in players) {
-        if (Object.hasOwnProperty.call(players, key)) {
-            const player = players[key];
-            player.sprite.update(dt);
-
-        }
-    }
+    player.sprite.update(dt);
 
     // Update all the bullets
     for (var i = 0; i < bullets.length; i++) {
@@ -234,6 +204,64 @@ function updateEntities(dt) {
     }
 }
 
+// Collisions
+
+function collides(x, y, r, b, x2, y2, r2, b2) {
+    return !(r <= x2 || x > r2 ||
+        b <= y2 || y > b2);
+}
+
+function boxCollides(pos, size, pos2, size2) {
+    return collides(pos[0], pos[1],
+        pos[0] + size[0], pos[1] + size[1],
+        pos2[0], pos2[1],
+        pos2[0] + size2[0], pos2[1] + size2[1]);
+}
+
+function checkCollisions() {
+    checkPlayerBounds();
+
+    // Run collision detection for all enemies and bullets
+    for (var i = 0; i < enemies.length; i++) {
+        var pos = enemies[i].pos;
+        var size = enemies[i].sprite.size;
+
+        for (var j = 0; j < bullets.length; j++) {
+            var pos2 = bullets[j].pos;
+            var size2 = bullets[j].sprite.size;
+
+            if (boxCollides(pos, size, pos2, size2)) {
+                // Remove the enemy
+                enemies.splice(i, 1);
+                i--;
+
+                // Add score
+                score += 100;
+
+                // Add an explosion
+                explosions.push({
+                    pos: pos,
+                    sprite: new Sprite('img/sprites.png',
+                        [0, 117],
+                        [39, 39],
+                        16,
+                        [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+                        null,
+                        true)
+                });
+
+                // Remove the bullet and stop this iteration
+                bullets.splice(j, 1);
+                break;
+            }
+        }
+
+        if (boxCollides(pos, size, player.pos, player.sprite.size)) {
+            gameOver();
+        }
+    }
+}
+
 function checkPlayerBounds() {
     // Check bounds
     if (player.pos[0] < 0) {
@@ -258,11 +286,7 @@ function render() {
 
     // Render the player if the game isn't over
     if (!isGameOver) {
-        for (const id in players) {
-            if (Object.hasOwnProperty.call(players, id)) {
-                renderEntity(players[id]);
-            }
-        }
+        renderEntity(player);
     }
 
     renderEntities(bullets);
@@ -302,5 +326,5 @@ function reset() {
     enemies = [];
     bullets = [];
 
-    // player.pos = [50, canvas.height / 2];
+    player.pos = [50, canvas.height / 2];
 };
