@@ -24,6 +24,9 @@ var bullets = [];
 var enemies = [];
 var explosions = [];
 var playerId;
+var tik = 0;
+var stateBufer = [];
+var inputBufer = [];
 
 var lastFire = Date.now();
 var gameTime = 0;
@@ -48,18 +51,19 @@ socket.on('new player', function (data) {
         if (Object.hasOwnProperty.call(data, key)) {
             const player = data[key];
             players[key] = new Player(player.id, player.x, player.y);
+
+            if (socket.id == player.socketId) playerId = player.id
         }
     }
-    console.log(players);
-
 });
 
 socket.on('state', function (data) {
+    
 
-    if (data?.id) {
-        players[data.id].pos[0] = data.x;
-        players[data.id].pos[1] = data.y
-        players[data.id].changeDirection(data.dir)
+    if (data?.playerId) {
+        players[data.playerId].pos[0] = data.x;
+        players[data.playerId].pos[1] = data.y
+        players[data.playerId].changeDirection(data.dir)
     }
 
     if (data?.bullet) {
@@ -88,8 +92,7 @@ socket.on('explosions', function (data) {
 })
 
 function main() {
-
-    var now = Date.now();
+    var now = performance.now();
     var dt = (now - lastTime) / 1000.0;
 
     update(dt);
@@ -102,10 +105,21 @@ function main() {
         window.inputManual().W ||
         window.inputManual().SPACE
     ) {
-        socket.emit('movement', window.window.inputManual());
+        socket.emit('movement', {
+            tik,
+            playerId,
+            state: window.inputManual()
+        });
+
+        inputBufer[tik] = { input: window.inputManual(), dt };
+        stateBufer[tik] = players[playerId].pos;
+        console.log(tik);
+
     }
 
+
     lastTime = now;
+    tik++;
 
     requestAnimationFrame(main);
 
@@ -134,7 +148,7 @@ function update(dt) {
 };
 
 function handleInput(dt) {
-    const player = players[socket.id]
+    const player = players[playerId]
     let delta = playerSpeed * dt;
 
     if (input.isDown('w') && input.isDown('d')) {
