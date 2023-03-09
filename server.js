@@ -39,7 +39,7 @@ io.on('connection', function (socket) {
 
     socket.on('new player', function () {
         var id = uid()
-        players[id] = { id, x: randomInteger(10, 500), y: randomInteger(10, 400), dir: "LEFT" }
+        players[id] = { id, socketId: socket.id, x: randomInteger(10, 500), y: randomInteger(10, 400), dir: "LEFT" }
         io.sockets.emit('new player', players);
     });
 
@@ -49,18 +49,24 @@ io.on('connection', function (socket) {
         var currentTime = (new Date()).getTime();
         var timeDifference = currentTime - lastUpdateTime;
 
-        var player = players[socket.id] || {};
-        player = handleInput(player, data);
+        var player = players[data.playerId] || {};
+        player = handleInput(player, data.state);
 
         // player.x > 550 ? player.x = 0 : ""
 
         lastUpdateTime = currentTime
 
-        io.sockets.emit('state', player);
+        io.sockets.emit('state', {
+
+            playerId: data.playerId,
+            tik: data.tik,
+            ...player
+        });
     });
 
     socket.on('disconnect', function (data) {
-        delete players[socket.id]
+        var playerId = getPlayerId(socket.id);
+        delete players[playerId]
         io.sockets.emit('new player', players)
     })
 
@@ -253,4 +259,15 @@ function boxCollides(pos, size, pos2, size2) {
         pos[0] + size[0], pos[1] + size[1],
         pos2[0], pos2[1],
         pos2[0] + size2[0], pos2[1] + size2[1]);
+}
+
+function getPlayerId(socketId) {
+    for (const key in players) {
+        if (Object.hasOwnProperty.call(players, key)) {
+            const player = players[key];
+            if (player.socketId == socketId) return key
+        }
+    }
+
+    throw "Player not exist"
 }
