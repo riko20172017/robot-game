@@ -58,20 +58,28 @@ socket.on('new player', function (data) {
 });
 
 socket.on('state', function (data) {
-    
-
-    if (data?.playerId) {
-        players[data.playerId].pos[0] = data.x;
-        players[data.playerId].pos[1] = data.y
-        players[data.playerId].changeDirection(data.dir)
+    for (const id in data) {
+        if (Object.hasOwnProperty.call(data, id)) {
+            const player = data[id];
+            players[id].pos[0] = player.x
+            players[id].pos[1] = player.y
+            players[id].changeDirection(player.dir)
+        }
     }
 
-    if (data?.bullet) {
-        bullets.push({
-            ...data.bullet,
-            sprite: new Sprite('img/sprites.png', [0, 39], [18, 8], [0, 0], 10, data.bullet.dir)
-        })
-    }
+    // for (let index = data.tik; index <= tik; index++) {
+    //     update(inputBufer[data.tik].dt, inputBufer[data.tik].input)
+    // }
+
+    // stateBufer.shift(0, data.tik)
+    // inputBufer.shift(0, data.tik)
+
+    // if (data?.bullet) {
+    //     bullets.push({
+    //         ...data.bullet,
+    //         sprite: new Sprite('img/sprites.png', [0, 39], [18, 8], [0, 0], 10, data.bullet.dir)
+    //     })
+    // }
 
 })
 
@@ -95,7 +103,7 @@ function main() {
     var now = performance.now();
     var dt = (now - lastTime) / 1000.0;
 
-    update(dt);
+    update(dt, window.input);
     render();
 
     if (
@@ -113,7 +121,6 @@ function main() {
 
         inputBufer[tik] = { input: window.inputManual(), dt };
         stateBufer[tik] = players[playerId].pos;
-        console.log(tik);
 
     }
 
@@ -141,57 +148,57 @@ function init() {
 function update(dt) {
     gameTime += dt;
 
-    handleInput(dt);
+    handleInput(dt, window.input);
     updateEntities(dt);
 
     scoreEl.innerHTML = score;
 };
 
-function handleInput(dt) {
+function handleInput(dt, input) {
     const player = players[playerId]
     let delta = playerSpeed * dt;
 
-    if (input.isDown('w') && input.isDown('d')) {
+    if (isDown('w', input) && isDown('d', input)) {
         player.move('UP-RIGHT', delta)
         return
     }
 
-    if (input.isDown('w') && input.isDown('a')) {
+    if (isDown('w', input) && isDown('a', input)) {
         player.move('UP-LEFT', delta)
         return
     }
 
-    if (input.isDown('s') && input.isDown('d')) {
+    if (isDown('s', input) && isDown('d', input)) {
         player.move('DOWN-RIGHT', delta)
         return
     }
 
-    if (input.isDown('s') && input.isDown('a')) {
+    if (isDown('s', input) && isDown('a', input)) {
         player.move('DOWN-LEFT', delta)
         return
     }
 
-    if (input.isDown('s')) {
+    if (isDown('s', input)) {
         player.move('DOWN', delta)
         return
     }
 
-    if (input.isDown('d')) {
+    if (isDown('d', input)) {
         player.move('RIGHT', delta)
         return
     }
 
-    if (input.isDown('w')) {
+    if (isDown('w', input)) {
         player.move('UP', delta)
         return
     }
 
-    if (input.isDown('a')) {
+    if (isDown('a', input)) {
         player.move('LEFT', delta)
         return
     }
 
-    if (input.isDown('d')) {
+    if (isDown('d', input)) {
         player.move('RIGHT', delta)
     }
 }
@@ -318,3 +325,7 @@ function reset() {
 
     // player.pos = [50, canvas.height / 2];
 };
+
+function isDown(key, input) {
+    return input[key.toUpperCase()];
+}

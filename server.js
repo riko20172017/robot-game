@@ -32,7 +32,8 @@ var bullets = []
 var playerSpeed = 200;
 var bulletSpeed = 500;
 var lastFire = Date.now();
-var lastTime;
+var lastTime = performance.now();
+var dt; 
 var gameTime = 0;
 
 io.on('connection', function (socket) {
@@ -43,25 +44,14 @@ io.on('connection', function (socket) {
         io.sockets.emit('new player', players);
     });
 
-    var lastUpdateTime = (new Date()).getTime();
 
     socket.on('movement', function (data) {
-        var currentTime = (new Date()).getTime();
-        var timeDifference = currentTime - lastUpdateTime;
-
         var player = players[data.playerId] || {};
-        player = handleInput(player, data.state);
+        player.tik = data.tik;
+        player = handleInput(player, data.state, dt);
 
         // player.x > 550 ? player.x = 0 : ""
 
-        lastUpdateTime = currentTime
-
-        io.sockets.emit('state', {
-
-            playerId: data.playerId,
-            tik: data.tik,
-            ...player
-        });
     });
 
     socket.on('disconnect', function (data) {
@@ -73,14 +63,18 @@ io.on('connection', function (socket) {
 });
 
 setInterval(() => {
-    var now = Date.now();
-    var dt = (now - lastTime) / 1000.0;
+    var now = performance.now();
+    dt = (now - lastTime) / 1000.0;
 
     update(dt)
 
+    io.sockets.emit('state', {
+        ...players
+    });
+
     lastTime = now;
 
-}, 1000 / 60);
+}, 1000 / 20);
 
 // setInterval(function () {
 //     io.sockets.emit('state', player);
@@ -98,7 +92,9 @@ function randomInteger(min, max) {
     return Math.round(rand);
 }
 
-function handleInput(player, data) {
+function handleInput(player, data, dt) {
+    let delta = playerSpeed * dt;
+    console.log(delta);
 
     if (data.SPACE && Date.now() - lastFire > 300) {
         var x = player.x + 19;
@@ -131,53 +127,53 @@ function handleInput(player, data) {
     }
 
     if (data.W && data.D) {
-        player.y -= 5;
-        player.x += 5;
+        player.y -= delta;
+        player.x += delta;
         player.dir = 'UP-RIGHT'
         return player
     }
 
     if (data.W && data.A) {
-        player.y -= 5;
-        player.x -= 5;
+        player.y -= delta;
+        player.x -= delta;
         player.dir = 'UP-LEFT'
         return player
     }
 
     if (data.S && data.D) {
-        player.y += 5;
-        player.x += 5;
+        player.y += delta;
+        player.x += delta;
         player.dir = 'DOWN-RIGHT'
         return player
     }
 
     if (data.S && data.A) {
-        player.y += 5;
-        player.x -= 5;
+        player.y += delta;
+        player.x -= delta;
         player.dir = 'DOWN-LEFT'
         return player
     }
 
     if (data.S) {
-        player.y += 5;
+        player.y += delta;
         player.dir = 'DOWN'
         return player
     }
 
     if (data.W) {
-        player.y -= 5;
+        player.y -= delta;
         player.dir = 'UP'
         return player
     }
 
     if (data.A) {
-        player.x -= 5;
+        player.x -= delta;
         player.dir = 'LEFT'
         return player
     }
 
     if (data.D) {
-        player.x += 5;
+        player.x += delta;
         player.dir = 'RIGHT'
         return player
     }

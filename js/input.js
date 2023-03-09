@@ -1,6 +1,6 @@
 
 (function () {
-    var pressedKeys = {};
+    window.input = {};
     var mouse = { x: 0, y: 0 };
 
     function setKey(event, status) {
@@ -23,7 +23,7 @@
                 key = String.fromCharCode(code);
         }
 
-        pressedKeys[key] = status;
+        window.input[key] = status;
     }
 
     document.addEventListener('keydown', function (e) {
@@ -35,17 +35,11 @@
     });
 
     window.addEventListener('blur', function () {
-        pressedKeys = {};
+        window.input = {};
     });
 
-    window.input = {
-        isDown: function (key) {
-            return pressedKeys[key.toUpperCase()];
-        }
-    };
-
     window.inputManual = function (key) {
-        return { ...pressedKeys, mouse: { ...window.getMouse() } };
+        return { ...window.input, mouse: { ...window.getMouse() } };
     }
 
     const canvas = document.getElementById('canvas');
