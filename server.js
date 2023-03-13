@@ -27,36 +27,47 @@ httpServer.listen(5000, function () {
     console.log('Запускаю сервер на порте 5000');
 });
 
-var players = {}
+var players = []
 var bullets = []
-var playerSpeed = 200;
+var inputBuffer = []
+var playerSpeed = 50;
 var bulletSpeed = 500;
 var lastFire = Date.now();
 var lastTime = performance.now();
-var dt; 
+var dt;
 var gameTime = 0;
 
 io.on('connection', function (socket) {
 
     socket.on('new player', function () {
         var id = uid()
-        players[id] = { id, socketId: socket.id, x: randomInteger(10, 500), y: randomInteger(10, 400), dir: "LEFT" }
+        players.push(
+            {
+                id,
+                socketId: socket.id,
+                x: randomInteger(10, 500),
+                y: randomInteger(10, 400),
+                dir: "LEFT"
+            })
         io.sockets.emit('new player', players);
     });
 
 
     socket.on('movement', function (data) {
-        var player = players[data.playerId] || {};
-        player.tik = data.tik;
-        player = handleInput(player, data.state, dt);
+        inputBuffer.push(data)
+    })
 
-        // player.x > 550 ? player.x = 0 : ""
+    // var player = players[data.playerId] || {};
+    // player.tik = data.tik;
+    // player = handleInput(player, data.state, dt);
 
-    });
+    // player.x > 550 ? player.x = 0 : ""
+
+
 
     socket.on('disconnect', function (data) {
-        var playerId = getPlayerId(socket.id);
-        delete players[playerId]
+        if (!players.length) return
+        players = players.filter(player => player.socketId != socket.id)
         io.sockets.emit('new player', players)
     })
 
@@ -64,7 +75,7 @@ io.on('connection', function (socket) {
 
 setInterval(() => {
     var now = performance.now();
-    dt = (now - lastTime) / 1000.0;
+    var dt = (now - lastTime) / 1000.0;
 
     update(dt)
 
@@ -73,6 +84,8 @@ setInterval(() => {
     });
 
     lastTime = now;
+
+    inputBuffer = [];
 
 }, 1000 / 20);
 
@@ -94,7 +107,6 @@ function randomInteger(min, max) {
 
 function handleInput(player, data, dt) {
     let delta = playerSpeed * dt;
-    console.log(delta);
 
     if (data.SPACE && Date.now() - lastFire > 300) {
         var x = player.x + 19;
@@ -182,8 +194,17 @@ function handleInput(player, data, dt) {
 function update(dt) {
     gameTime += dt;
 
-    updateEntities(dt)
+    updatePlayers()
+    // updateEntities(dt)
     checkCollisions();
+}
+
+function updatePlayers(dt) {
+    inputBuffer.forEach(data => {
+        var player = getPlayer(data.playerId)
+        handleInput(player, data.input, dt);
+    });
+
 }
 
 function updateEntities(dt) {
@@ -266,4 +287,8 @@ function getPlayerId(socketId) {
     }
 
     throw "Player not exist"
+}
+
+function getPlayer(playerId) {
+    return players.find(player => player.id == playerId)
 }
