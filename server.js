@@ -30,7 +30,7 @@ httpServer.listen(5000, function () {
 var players = []
 var bullets = []
 var inputBuffer = []
-var playerSpeed = 50;
+var playerSpeed = 200;
 var bulletSpeed = 500;
 var lastFire = Date.now();
 var lastTime = performance.now();
@@ -47,23 +47,20 @@ io.on('connection', function (socket) {
                 socketId: socket.id,
                 x: randomInteger(10, 500),
                 y: randomInteger(10, 400),
-                dir: "LEFT"
+                dir: "LEFT",
+                clientInput: {
+                    tik: 0,
+                    input: { A: false, W: false, S: false, D: false, SPACE: false }
+                }
             })
         io.sockets.emit('new player', players);
     });
 
 
     socket.on('movement', function (data) {
-        inputBuffer.push(data)
+        var player = getPlayer(data.playerId)
+        player.clientInput = { tik: data.tik, input: data.input }
     })
-
-    // var player = players[data.playerId] || {};
-    // player.tik = data.tik;
-    // player = handleInput(player, data.state, dt);
-
-    // player.x > 550 ? player.x = 0 : ""
-
-
 
     socket.on('disconnect', function (data) {
         if (!players.length) return
@@ -79,9 +76,7 @@ setInterval(() => {
 
     update(dt)
 
-    io.sockets.emit('state', {
-        ...players
-    });
+    io.sockets.emit('state', [...players]);
 
     lastTime = now;
 
@@ -89,24 +84,24 @@ setInterval(() => {
 
 }, 1000 / 20);
 
-// setInterval(function () {
-//     io.sockets.emit('state', player);
-// }, 1000 / 20);
+function update(dt) {
+    gameTime += dt;
 
-// setInterval(function () {
-//     if (player.x == 500) player.x = 0
-//     player.x = player.x + 5
-//     io.sockets.emit('state', player);
-// }, 1000 / 60);
-
-function randomInteger(min, max) {
-    // получить случайное число от (min-0.5) до (max+0.5)
-    let rand = min - 0.5 + Math.random() * (max - min + 1);
-    return Math.round(rand);
+    updatePlayers(dt)
+    // updateEntities(dt)
+    checkCollisions();
 }
 
-function handleInput(player, data, dt) {
+function updatePlayers(dt) {
+    players = players.map(player => {
+        return handleInput(player, dt);
+    });
+}
+
+function handleInput(player, dt) {
     let delta = playerSpeed * dt;
+
+    var data = player.clientInput.input;
 
     if (data.SPACE && Date.now() - lastFire > 300) {
         var x = player.x + 19;
@@ -138,73 +133,27 @@ function handleInput(player, data, dt) {
         return { ...player, bullet: { ...bullet } }
     }
 
-    if (data.W && data.D) {
-        player.y -= delta;
-        player.x += delta;
-        player.dir = 'UP-RIGHT'
-        return player
-    }
-
-    if (data.W && data.A) {
-        player.y -= delta;
-        player.x -= delta;
-        player.dir = 'UP-LEFT'
-        return player
-    }
-
-    if (data.S && data.D) {
-        player.y += delta;
-        player.x += delta;
-        player.dir = 'DOWN-RIGHT'
-        return player
-    }
-
-    if (data.S && data.A) {
-        player.y += delta;
-        player.x -= delta;
-        player.dir = 'DOWN-LEFT'
-        return player
-    }
-
     if (data.S) {
         player.y += delta;
         player.dir = 'DOWN'
-        return player
     }
 
     if (data.W) {
         player.y -= delta;
         player.dir = 'UP'
-        return player
     }
 
     if (data.A) {
         player.x -= delta;
         player.dir = 'LEFT'
-        return player
     }
 
     if (data.D) {
         player.x += delta;
         player.dir = 'RIGHT'
-        return player
     }
-}
 
-function update(dt) {
-    gameTime += dt;
-
-    updatePlayers()
-    // updateEntities(dt)
-    checkCollisions();
-}
-
-function updatePlayers(dt) {
-    inputBuffer.forEach(data => {
-        var player = getPlayer(data.playerId)
-        handleInput(player, data.input, dt);
-    });
-
+    return player
 }
 
 function updateEntities(dt) {
@@ -291,4 +240,10 @@ function getPlayerId(socketId) {
 
 function getPlayer(playerId) {
     return players.find(player => player.id == playerId)
+}
+
+function randomInteger(min, max) {
+    // получить случайное число от (min-0.5) до (max+0.5)
+    let rand = min - 0.5 + Math.random() * (max - min + 1);
+    return Math.round(rand);
 }

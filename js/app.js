@@ -19,7 +19,10 @@ resources.load([
 resources.onReady(init);
 
 // Game state
-var players = {};
+var fps = 30;
+var interval = 1000 / fps;
+var then;
+var players = [];
 var bullets = [];
 var enemies = [];
 var explosions = [];
@@ -40,32 +43,62 @@ var scoreEl = document.getElementById('score');
 var playerSpeed = 200;
 var bulletSpeed = 500;
 var enemySpeed = 100;
+var dt = 0;
 
 var socket = io();
 
 socket.emit('new player');
 
 socket.on('new player', function (data) {
-    players = {};
-    for (const key in data) {
-        if (Object.hasOwnProperty.call(data, key)) {
-            const player = data[key];
-            players[key] = new Player(player.id, player.x, player.y);
-
-            if (socket.id == player.socketId) playerId = player.id
-        }
-    }
+    players = data.map((player) => {
+        if (socket.id == player.socketId) playerId = player.id
+        return new Player(player.id, player.x, player.y)
+    });
 });
 
 socket.on('state', function (data) {
-    for (const id in data) {
-        if (Object.hasOwnProperty.call(data, id)) {
-            const player = data[id];
-            players[id].pos[0] = player.x
-            players[id].pos[1] = player.y
-            players[id].changeDirection(player.dir)
+    data.map(server => {
+        var player = getPlayerById(players, server.id);
+        player.pos[0] = server.x
+        player.pos[1] = server.y
+        player.changeDirection(server.dir)
+
+        console.log(`%cserver Tik : ${server.clientInput.tik}`, "color:red");
+
+
+        if (server.id == playerId) {
+            var serverTik = server.clientInput.tik
+            // console.log("server tik: " + serverTik + " state X : " + server.x);
+
+            for (let index = serverTik; index <= tik; index++) {
+                if (inputBufer[index]) {
+                    update(inputBufer[index].dt, inputBufer[index].input)
+                    var player = getPlayerById(players, server.id);
+                    console.log("%cclient prediction: " + index + " reconciliation X : " + player.pos[0], "color: blue");
+                }
+            }
+
+            stateBufer.splice(0, serverTik)
+            inputBufer.splice(0, serverTik)
+
         }
-    }
+    })
+
+
+
+    // players = players.map(player => {
+    //     player.pos[0] = play.x
+    //     player.pos[1] = player.y
+    //     player.changeDirection(player.dir)
+    // })
+    // for (const id in data) {
+    //     if (Object.hasOwnProperty.call(data, id)) {
+    //         const player = data[id];
+    //         players[id].pos[0] = player.x
+    //         players[id].pos[1] = player.y
+    //         players[id].changeDirection(player.dir)
+    //     }
+    // }
 
     // for (let index = data.tik; index <= tik; index++) {
     //     update(inputBufer[data.tik].dt, inputBufer[data.tik].input)
@@ -100,37 +133,31 @@ socket.on('explosions', function (data) {
 })
 
 function main() {
-    var now = performance.now();
-    var dt = (now - lastTime) / 1000.0;
-
-    update(dt, window.input);
-    render();
-
-    if (
-        window.inputManual().A ||
-        window.inputManual().D ||
-        window.inputManual().S ||
-        window.inputManual().W ||
-        window.inputManual().SPACE
-    ) {
-        socket.emit('movement', {
-            tik,
-            playerId,
-            state: window.inputManual()
-        });
-
-        inputBufer[tik] = { input: window.inputManual(), dt };
-        stateBufer[tik] = players[playerId].pos;
-
-    }
-
-
-    lastTime = now;
-    tik++;
-
     requestAnimationFrame(main);
 
-};
+    var timestamp = performance.now()
+
+    // assign to 'then' for the first run
+    if (then === undefined) {
+        then = timestamp;
+    }
+
+    const delta = timestamp - then;
+
+    if (delta > interval) {
+        then = timestamp - (delta % interval);
+
+        var now = performance.now();
+        dt = (now - lastTime) / 1000.0;
+
+        update(dt, window.input);
+        render();
+
+        lastTime = now;
+        tik++;
+
+    };
+}
 
 function init() {
     terrainPattern = ctx.createPattern(resources.get('img/terrain.png'), 'repeat');
@@ -155,7 +182,7 @@ function update(dt) {
 };
 
 function handleInput(dt, input) {
-    const player = players[playerId]
+    const player = getPlayer();
     let delta = playerSpeed * dt;
 
     if (isDown('w', input) && isDown('d', input)) {
@@ -279,11 +306,7 @@ function render() {
 
     // Render the player if the game isn't over
     if (!isGameOver) {
-        for (const id in players) {
-            if (Object.hasOwnProperty.call(players, id)) {
-                renderEntity(players[id]);
-            }
-        }
+        players.forEach(player => renderEntity(player))
     }
 
     renderEntities(bullets);
@@ -326,6 +349,78 @@ function reset() {
     // player.pos = [50, canvas.height / 2];
 };
 
+function getPlayer() {
+    return players.find(player => player.id == playerId);
+}
+
+function getPlayerById(players, playerId) {
+    return players.find(({ id }) => id == playerId);
+}
+
 function isDown(key, input) {
     return input[key.toUpperCase()];
+}
+
+window.input = {};
+var mouse = { x: 0, y: 0 };
+
+function setKey(event, status) {
+    var code = event.keyCode;
+    var key;
+
+    switch (code) {
+        case 32:
+            key = 'SPACE'; break;
+        case 37:
+            key = 'LEFT'; break;
+        case 38:
+            key = 'UP'; break;
+        case 39:
+            key = 'RIGHT'; break;
+        case 40:
+            key = 'DOWN'; break;
+        default:
+            // Convert ASCII codes to letters
+            key = String.fromCharCode(code);
+    }
+
+    window.input[key] = status;
+
+    socket.emit('movement', {
+        tik,
+        playerId,
+        input: window.inputManual()
+    });
+
+    inputBufer[tik] = { input: window.inputManual(), dt };
+    stateBufer[tik] = getPlayer().pos;
+
+    console.log(`%cbuffer Tik : ${tik}`, "color:green");
+
+}
+
+
+document.addEventListener('keydown', function (e) {
+    setKey(e, true);
+});
+
+document.addEventListener('keyup', function (e) {
+    setKey(e, false);
+});
+
+window.addEventListener('blur', function () {
+    window.input = {};
+});
+
+window.inputManual = function (key) {
+    return { ...window.input, mouse: { ...window.getMouse() } };
+}
+
+canvas.addEventListener('mousemove', event => {
+    mouse.x = event.offsetX;
+    mouse.y = event.offsetY;
+});
+
+window.getMouse = function () {
+    return { x: mouse.x, y: mouse.y };
 }
