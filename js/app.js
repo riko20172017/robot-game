@@ -63,7 +63,7 @@ socket.on('state', function (data) {
         player.pos[1] = server.y
         player.changeDirection(server.dir)
 
-        console.log(`%cserver Tik : ${server.clientInput.tik}`, "color:red");
+        // console.log(`%cserver Tik : ${server.clientInput.tik}`, "color:red");
 
 
         if (server.id == playerId) {
@@ -71,16 +71,18 @@ socket.on('state', function (data) {
             // console.log("server tik: " + serverTik + " state X : " + server.x);
 
             for (let index = serverTik; index <= tik; index++) {
+                // console.log("%cclient index: " + index, "color: yellow");
+
                 if (inputBufer[index]) {
                     update(inputBufer[index].dt, inputBufer[index].input)
                     var player = getPlayerById(players, server.id);
-                    console.log("%cclient prediction: " + index + " reconciliation X : " + player.pos[0], "color: blue");
+                    // console.log("%cclient prediction: " + index, "color: blue");
+
                 }
             }
 
             stateBufer.splice(0, serverTik)
             inputBufer.splice(0, serverTik)
-
         }
     })
 
@@ -153,10 +155,29 @@ function main() {
         update(dt, window.input);
         render();
 
+
+        if (
+            window.inputManual().A ||
+            window.inputManual().D ||
+            window.inputManual().S ||
+            window.inputManual().W ||
+            window.inputManual().SPACE
+        ) {
+            socket.emit('movement', {
+                tik,
+                playerId,
+                input: window.inputManual()
+            });
+
+            console.log(window.inputManual());
+
+            inputBufer[tik] = { input: window.inputManual(), dt };
+            stateBufer[tik] = getPlayer().pos;
+        };
+
         lastTime = now;
         tik++;
-
-    };
+    }
 }
 
 function init() {
@@ -386,14 +407,14 @@ function setKey(event, status) {
 
     window.input[key] = status;
 
-    socket.emit('movement', {
-        tik,
-        playerId,
-        input: window.inputManual()
-    });
+    // socket.emit('movement', {
+    //     tik,
+    //     playerId,
+    //     input: window.inputManual()
+    // });
 
-    inputBufer[tik] = { input: window.inputManual(), dt };
-    stateBufer[tik] = getPlayer().pos;
+    // inputBufer[tik] = { input: window.inputManual(), dt };
+    // stateBufer[tik] = getPlayer().pos;
 
     console.log(`%cbuffer Tik : ${tik}`, "color:green");
 
