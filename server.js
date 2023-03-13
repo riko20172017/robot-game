@@ -5,6 +5,7 @@ import path from 'path';
 import { Server } from "socket.io";
 import { uid } from 'uid'
 import { fileURLToPath } from 'url';
+import { performance } from 'perf_hooks';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
