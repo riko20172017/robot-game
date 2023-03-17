@@ -69,7 +69,6 @@ socket.on('state', function (data) {
 
 
         if (server.id == playerId) {
-            console.log(tik + " - " + server.clientInput.tik);
             var serverTik = server.clientInput.tik
             // console.log("server tik: " + serverTik + " state X : " + server.x);
 
