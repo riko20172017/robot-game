@@ -28,15 +28,25 @@ httpServer.listen(5000, function () {
     console.log('Запускаю сервер на порте 5000');
 });
 
+// Game state
+var fps = 30;
+var frameCount = 0;
+var interval = 1000 / fps;
+var now;
+var now1;
+var elapsed;
+var then = performance.now();
+var startTime = then;
+var lastTime;
+var dt = 0;
+var tik = 0
+
 var players = []
 var bullets = []
 var inputBuffer = []
 var playerSpeed = 200;
 var bulletSpeed = 500;
-var lastFire = Date.now();
-var lastTime = performance.now();
-var dt;
-var gameTime = 0;
+var lastFire = performance.now();
 
 io.on('connection', function (socket) {
 
@@ -71,22 +81,45 @@ io.on('connection', function (socket) {
 
 });
 
-setInterval(() => {
-    var now = performance.now();
-    var dt = (now - lastTime) / 1000.0;
 
-    update(dt)
+function main() {
+    setImmediate(main);
 
-    io.sockets.emit('state', [...players]);
+    now = performance.now();
+    elapsed = now - then;
 
-    lastTime = now;
+    if (elapsed > interval) {
+        then = now - (elapsed % interval);
 
-    inputBuffer = [];
+        var sinceStart = now - startTime;
 
-}, 1000 / 20);
+        now1 = performance.now();
+
+        dt = (now1 - lastTime) / 1000;
+
+        var currentFps =
+            Math.round(1000 / (now1 - lastTime));
+        var gameTime = ("time: "
+            + Math.round((sinceStart / 1000) * 100) / 100, 350, 20);
+
+
+        update(dt)
+
+        io.sockets.emit('state', [...players]);
+
+        lastTime = now1;
+        tik++;
+
+        inputBuffer = [];
+
+        console.clear();
+        console.log("time: "
+        + Math.round((sinceStart / 1000) * 100) / 100);
+        console.log("fps: " + currentFps)
+    }
+}
 
 function update(dt) {
-    gameTime += dt;
 
     updatePlayers(dt)
     // updateEntities(dt)
@@ -248,3 +281,5 @@ function randomInteger(min, max) {
     let rand = min - 0.5 + Math.random() * (max - min + 1);
     return Math.round(rand);
 }
+
+main()

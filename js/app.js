@@ -20,8 +20,13 @@ resources.onReady(init);
 
 // Game state
 var fps = 30;
+var frameCount = 0;
 var interval = 1000 / fps;
-var then;
+var now;
+var now1;
+var elapsed;
+var then = performance.now();
+var startTime = then;
 var players = [];
 var bullets = [];
 var enemies = [];
@@ -137,20 +142,20 @@ socket.on('explosions', function (data) {
 function main() {
     requestAnimationFrame(main);
 
-    var timestamp = performance.now()
+    now = performance.now();
+    elapsed = now - then;
 
-    // assign to 'then' for the first run
-    if (then === undefined) {
-        then = timestamp;
-    }
+    if (elapsed > interval) {
+        then = now - (elapsed % interval);
 
-    const delta = timestamp - then;
+        var sinceStart = now - startTime;
 
-    if (delta > interval) {
-        then = timestamp - (delta % interval);
+        now1 = performance.now();
 
-        var now = performance.now();
-        dt = (now - lastTime) / 1000.0;
+        dt = (now1 - lastTime) / 1000;
+
+        var currentFps =
+            Math.round(1000 / (now1 - lastTime));
 
         update(dt, window.input);
         render();
@@ -169,14 +174,21 @@ function main() {
                 input: window.inputManual()
             });
 
-            console.log(window.inputManual());
-
             inputBufer[tik] = { input: window.inputManual(), dt };
             stateBufer[tik] = getPlayer().pos;
         };
 
-        lastTime = now;
+        lastTime = now1;
         tik++;
+
+
+
+        ctx.fillStyle = "white"
+        ctx.font = "18px arial";
+        ctx.fillText("time: "
+            + Math.round((sinceStart / 1000) * 100) / 100, 350, 20);
+        ctx.fillText("fps:   " + currentFps, 350, 40);
+
     }
 }
 
@@ -415,9 +427,6 @@ function setKey(event, status) {
 
     // inputBufer[tik] = { input: window.inputManual(), dt };
     // stateBufer[tik] = getPlayer().pos;
-
-    console.log(`%cbuffer Tik : ${tik}`, "color:green");
-
 }
 
 
