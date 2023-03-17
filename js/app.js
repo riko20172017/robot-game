@@ -56,35 +56,36 @@ socket.on('new player', function (data) {
         if (socket.id == player.socketId) playerId = player.id
         return new Player(player.id, player.x, player.y)
     });
+    players.push(new Player("asdasd", data[0].x, data[0].y))
 });
 
 socket.on('state', function (data) {
+   var  player = getPlayer()
     data.map(server => {
-        var player = getPlayerById(players, server.id);
-        player.pos[0] = server.x
-        player.pos[1] = server.y
-        player.changeDirection(server.dir)
+        var playerServer = getPlayerById(players, server.id);
+        playerServer.pos[0] = server.x
+        playerServer.pos[1] = server.y
+        playerServer.changeDirection(server.dir)
+
+        // player.pos[0] = server.x
+        // player.pos[1] = server.y
+        // playerServer.changeDirection(server.dir)
 
         // console.log(`%cserver Tik : ${server.clientInput.tik}`, "color:red");
 
+        var serverTik = server.clientInput.tik
 
-        if (server.id == playerId) {
-            var serverTik = server.clientInput.tik
-            // console.log("server tik: " + serverTik + " state X : " + server.x);
+        playerServer = getPlayer()
 
-            for (let index = serverTik; index <= tik; index++) {
-                // console.log("%cclient index: " + index, "color: yellow");
 
-                if (inputBufer[index]) {
-                    update(inputBufer[index].dt, inputBufer[index].input)
-                    var player = getPlayerById(players, server.id);
-                    // console.log("%cclient prediction: " + index, "color: blue");
 
-                }
-            }
-            stateBufer.splice(0, serverTik)
-            inputBufer.splice(0, serverTik)
-        }
+        // inputBufer.forEach((element, i) => {
+        //     update(element.dt, element.input)
+        // });
+
+        // stateBufer.splice(0, serverTik)
+        // inputBufer.splice(0, serverTik)
+
     })
 
 
@@ -194,13 +195,13 @@ function init() {
 }
 
 // Update game objects
-function update(dt) {
-    handleInput(dt, window.input);
+function update(dt, input) {
+    handleInput(dt, input);
     updateEntities(dt);
 
 };
 
-function handleInput(dt, a) {
+function handleInput(dt, input) {
     const player = getPlayer();
     let delta = playerSpeed * dt;
 
@@ -368,7 +369,7 @@ function reset() {
 };
 
 function getPlayer() {
-    return players.find(player => player.id == playerId);
+    return players.find(player => player.id == "asdasd");
 }
 
 function getPlayerById(players, playerId) {
