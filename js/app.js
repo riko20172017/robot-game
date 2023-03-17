@@ -174,6 +174,8 @@ function main() {
                 input: window.inputManual()
             });
 
+            console.log(window.input);
+
             inputBufer[tik] = { input: window.inputManual(), dt };
             stateBufer[tik] = getPlayer().pos;
         };
@@ -419,14 +421,6 @@ function setKey(event, status) {
 
     window.input[key] = status;
 
-    // socket.emit('movement', {
-    //     tik,
-    //     playerId,
-    //     input: window.inputManual()
-    // });
-
-    // inputBufer[tik] = { input: window.inputManual(), dt };
-    // stateBufer[tik] = getPlayer().pos;
 }
 
 
