@@ -41,9 +41,6 @@ var gameTime = 0;
 var isGameOver;
 var terrainPattern;
 
-var score = 0;
-var scoreEl = document.getElementById('score');
-
 // Speed in pixels per second
 var playerSpeed = 200;
 var bulletSpeed = 500;
@@ -72,6 +69,7 @@ socket.on('state', function (data) {
 
 
         if (server.id == playerId) {
+            console.log(tik + " - " + server.clientInput.tik);
             var serverTik = server.clientInput.tik
             // console.log("server tik: " + serverTik + " state X : " + server.x);
 
@@ -85,7 +83,6 @@ socket.on('state', function (data) {
 
                 }
             }
-
             stateBufer.splice(0, serverTik)
             inputBufer.splice(0, serverTik)
         }
@@ -154,31 +151,22 @@ function main() {
 
         dt = (now1 - lastTime) / 1000;
 
-        var currentFps =
-            Math.round(1000 / (now1 - lastTime));
+        var currentFps = Math.round(1000 / (now1 - lastTime));
 
         update(dt, window.input);
         render();
 
-
-        if (
-            window.inputManual().A ||
-            window.inputManual().D ||
-            window.inputManual().S ||
-            window.inputManual().W ||
-            window.inputManual().SPACE
-        ) {
+        if (players.length) {
             socket.emit('movement', {
                 tik,
                 playerId,
                 input: window.inputManual()
             });
 
-            console.log(window.input);
-
             inputBufer[tik] = { input: window.inputManual(), dt };
             stateBufer[tik] = getPlayer().pos;
-        };
+        }
+
 
         lastTime = now1;
         tik++;
@@ -208,15 +196,12 @@ function init() {
 
 // Update game objects
 function update(dt) {
-    gameTime += dt;
-
     handleInput(dt, window.input);
     updateEntities(dt);
 
-    scoreEl.innerHTML = score;
 };
 
-function handleInput(dt, input) {
+function handleInput(dt, a) {
     const player = getPlayer();
     let delta = playerSpeed * dt;
 
@@ -376,7 +361,6 @@ function reset() {
     document.getElementById('game-over-overlay').style.display = 'none';
     isGameOver = false;
     gameTime = 0;
-    score = 0;
 
     enemies = [];
     bullets = [];
