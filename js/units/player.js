@@ -1,7 +1,8 @@
 import Sprite from "../sprite.js";
 
 export default class Player {
-    constructor(x, y) {
+    constructor(id, x, y) {
+        this.id = id;
         this.pos = [x, y];
         this.sprite = new Sprite('img/player.png', [0, 0], [39, 39], 16, [0, 1])
     }

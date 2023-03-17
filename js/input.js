@@ -1,7 +1,7 @@
 
 (function () {
-    var pressedKeys = { left: false, up: false, right: false, down: false, space: false };
-    var mouse = { x:0, y:0 };
+    window.input = {};
+    var mouse = { x: 0, y: 0 };
 
     function setKey(event, status) {
         var code = event.keyCode;
@@ -23,7 +23,7 @@
                 key = String.fromCharCode(code);
         }
 
-        pressedKeys[key] = status;
+        window.input[key] = status;
     }
 
     document.addEventListener('keydown', function (e) {
@@ -35,14 +35,12 @@
     });
 
     window.addEventListener('blur', function () {
-        pressedKeys = {};
+        window.input = {};
     });
 
-    window.input = {
-        isDown: function (key) {
-            return pressedKeys[key.toUpperCase()];
-        }
-    };
+    window.inputManual = function (key) {
+        return { ...window.input, mouse: { ...window.getMouse() } };
+    }
 
     const canvas = document.getElementById('canvas');
     // We can use our function with a canvas event
@@ -59,5 +57,4 @@
     window.getMouse = function () {
         return { x: mouse.x, y: mouse.y };
     }
-
 })();
