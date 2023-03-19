@@ -1,5 +1,6 @@
 import Player from "./units/player.js";
 import Sprite from "./sprite.js";
+import PlayerTest from "./units/playerTest.js";
 
 // Create the canvas
 var canvas = document.getElementById('canvas');
@@ -15,6 +16,7 @@ resources.load([
     'img/sprites.png',
     'img/terrain.png',
     'img/player.png',
+    'img/playerTest.png',
 ]);
 resources.onReady(init);
 
@@ -35,6 +37,7 @@ var playerId;
 var tik = 0;
 var stateBufer = [];
 var inputBufer = [];
+var serverState = []
 
 var lastFire = Date.now();
 var gameTime = 0;
@@ -57,70 +60,45 @@ socket.on('new player', function (data) {
         if (socket.id == player.socketId) playerId = player.id
         return new Player(player.id, player.x, player.y)
     });
-    players.push(new Player("asdasd", data[0].x, data[0].y))
+    players.push(new PlayerTest("asdasd", data[0].x, data[0].y))
 
 });
 
 socket.on('state', function (data) {
-    data.map(server => {
-        var player = getPlayerById(players, server.id);
-        player.pos[0] = server.x
-        player.pos[1] = server.y
-        player.changeDirection(server.dir)
-
-        // console.log(`%cserver Tik : ${server.clientInput.tik}`, "color:red");
-
-
-        if (server.id == playerId) {
-            var serverTik = server.clientInput.tik
-            // console.log("server tik: " + serverTik + " state X : " + server.x);
-
-            for (let index = serverTik; index <= tik; index++) {
-                // console.log("%cclient index: " + index, "color: yellow");
-
-                if (inputBufer[index]) {
-                    update(inputBufer[index].dt, inputBufer[index].input)
-                    var player = getPlayerById(players, server.id);
-                    // console.log("%cclient prediction: " + index, "color: blue");
-
-                }
-            }
-            stateBufer.splice(0, serverTik + 1)
-            inputBufer.splice(0, serverTik + 1)
-        }
-    })
-
-
-
-    // players = players.map(player => {
-    //     player.pos[0] = play.x
-    //     player.pos[1] = player.y
-    //     player.changeDirection(player.dir)
-    // })
-    // for (const id in data) {
-    //     if (Object.hasOwnProperty.call(data, id)) {
-    //         const player = data[id];
-    //         players[id].pos[0] = player.x
-    //         players[id].pos[1] = player.y
-    //         players[id].changeDirection(player.dir)
-    //     }
-    // }
-
-    // for (let index = data.tik; index <= tik; index++) {
-    //     update(inputBufer[data.tik].dt, inputBufer[data.tik].input)
-    // }
-
-    // stateBufer.shift(0, data.tik)
-    // inputBufer.shift(0, data.tik)
-
-    // if (data?.bullet) {
-    //     bullets.push({
-    //         ...data.bullet,
-    //         sprite: new Sprite('img/sprites.png', [0, 39], [18, 8], [0, 0], 10, data.bullet.dir)
-    //     })
-    // }
-
+    serverState = data
 })
+
+
+
+// players = players.map(player => {
+//     player.pos[0] = play.x
+//     player.pos[1] = player.y
+//     player.changeDirection(player.dir)
+// })
+// for (const id in data) {
+//     if (Object.hasOwnProperty.call(data, id)) {
+//         const player = data[id];
+//         players[id].pos[0] = player.x
+//         players[id].pos[1] = player.y
+//         players[id].changeDirection(player.dir)
+//     }
+// }
+
+// for (let index = data.tik; index <= tik; index++) {
+//     update(inputBufer[data.tik].dt, inputBufer[data.tik].input)
+// }
+
+// stateBufer.shift(0, data.tik)
+// inputBufer.shift(0, data.tik)
+
+// if (data?.bullet) {
+//     bullets.push({
+//         ...data.bullet,
+//         sprite: new Sprite('img/sprites.png', [0, 39], [18, 8], [0, 0], 10, data.bullet.dir)
+//     })
+// }
+
+
 
 socket.on('explosions', function (data) {
     delete players[data.player.id]
@@ -152,6 +130,47 @@ function main() {
         now1 = performance.now();
 
         dt = (now1 - lastTime) / 1000;
+
+        serverState.forEach((state) => {
+            var player = getPlayerById(players, state.id);
+            player.pos[0] = state.x
+            player.pos[1] = state.y
+            player.changeDirection(state.dir)
+
+            var testPlayer = getPlayer()
+            testPlayer.pos[0] = state.x
+            testPlayer.pos[1] = state.y
+            testPlayer.changeDirection(state.dir)
+
+            if (state.id == playerId) {
+                var serverTik = state.clientInput.tik
+                // console.log("server tik: " + serverTik + " state X : " + server.x);
+
+                // console.log("start");
+                // console.log("server tik: " + serverTik);
+                var inputBufferIndex = inputBufer.findIndex(input => {
+                    // console.log("input tiks: " + input.tik);
+
+                    return input.tik == serverTik
+                })
+                // console.log("end");
+
+                if (!(inputBufferIndex == -1)) {
+
+                    inputBufer.splice(0, inputBufferIndex + 1)
+                    console.log(inputBufer.length);
+                    inputBufer.forEach((input, i) => {
+                        
+                        update(input.dt, input.input)
+                    })
+                }
+            }
+
+        })
+
+        serverState = []
+
+
 
         update(dt, window.input);
         render();
@@ -198,8 +217,8 @@ function init() {
 }
 
 // Update game objects
-function update(dt) {
-    handleInput(dt, window.input);
+function update(dt, input) {
+    handleInput(dt, input);
     updateEntities(dt);
 
 };
