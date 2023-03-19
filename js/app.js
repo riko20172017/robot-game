@@ -163,8 +163,9 @@ function main() {
                 input: window.inputManual()
             });
 
-            inputBufer[tik] = { input: window.inputManual(), dt };
-            stateBufer[tik] = getPlayer().pos;
+            inputBufer.push({ tik, input: window.inputManual(), dt })
+
+            // stateBufer[tik] = getPlayer().pos;
         }
 
         if (!(tik % 5)) {
