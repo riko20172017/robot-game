@@ -146,10 +146,10 @@ function main() {
                 var serverTik = state.clientInput.tik
                 // console.log("server tik: " + serverTik + " state X : " + server.x);
 
-                // console.log("start");
-                // console.log("server tik: " + serverTik);
+                console.log("start");
+                console.log("server tik: " + serverTik);
                 var inputBufferIndex = inputBufer.findIndex(input => {
-                    // console.log("input tiks: " + input.tik);
+                    console.log("input tiks: " + input.tik);
 
                     return input.tik == serverTik
                 })
@@ -158,9 +158,8 @@ function main() {
                 if (!(inputBufferIndex == -1)) {
 
                     inputBufer.splice(0, inputBufferIndex + 1)
-                    console.log(inputBufer.length);
                     inputBufer.forEach((input, i) => {
-                        
+
                         update(input.dt, input.input)
                     })
                 }
