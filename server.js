@@ -48,6 +48,10 @@ var playerSpeed = 200;
 var bulletSpeed = 500;
 var lastFire = performance.now();
 
+var currentFps = 0
+var gameTime = 0
+var timer = 0;
+
 io.on('connection', function (socket) {
 
     socket.on('new player', function () {
@@ -97,10 +101,13 @@ function main() {
 
         dt = (now1 - lastTime) / 1000;
 
-        var currentFps =
-            Math.round(1000 / (now1 - lastTime));
-        var gameTime = ("time: "
-            + Math.round((sinceStart / 1000) * 100) / 100, 350, 20);
+        if (!(tik % 30)) {
+            currentFps = Math.round(1000 / (now1 - lastTime));
+            gameTime = Math.round((sinceStart / 1000) * 100) / 100
+            console.clear();
+            console.log("time: " + gameTime);
+            console.log("fps: " + currentFps)
+        }
 
 
         update(dt)
@@ -112,10 +119,7 @@ function main() {
 
         inputBuffer = [];
 
-        console.clear();
-        console.log("time: "
-        + Math.round((sinceStart / 1000) * 100) / 100);
-        console.log("fps: " + currentFps)
+
     }
 }
 

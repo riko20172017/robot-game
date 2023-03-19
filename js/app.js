@@ -40,6 +40,7 @@ var lastFire = Date.now();
 var gameTime = 0;
 var isGameOver;
 var terrainPattern;
+var currentFps = 0
 
 // Speed in pixels per second
 var playerSpeed = 200;
@@ -57,35 +58,36 @@ socket.on('new player', function (data) {
         return new Player(player.id, player.x, player.y)
     });
     players.push(new Player("asdasd", data[0].x, data[0].y))
+
 });
 
 socket.on('state', function (data) {
-   var  player = getPlayer()
     data.map(server => {
-        var playerServer = getPlayerById(players, server.id);
-        playerServer.pos[0] = server.x
-        playerServer.pos[1] = server.y
-        playerServer.changeDirection(server.dir)
-
-        // player.pos[0] = server.x
-        // player.pos[1] = server.y
-        // playerServer.changeDirection(server.dir)
+        var player = getPlayerById(players, server.id);
+        player.pos[0] = server.x
+        player.pos[1] = server.y
+        player.changeDirection(server.dir)
 
         // console.log(`%cserver Tik : ${server.clientInput.tik}`, "color:red");
 
-        var serverTik = server.clientInput.tik
 
-        playerServer = getPlayer()
+        if (server.id == playerId) {
+            var serverTik = server.clientInput.tik
+            // console.log("server tik: " + serverTik + " state X : " + server.x);
 
+            for (let index = serverTik; index <= tik; index++) {
+                // console.log("%cclient index: " + index, "color: yellow");
 
+                if (inputBufer[index]) {
+                    update(inputBufer[index].dt, inputBufer[index].input)
+                    var player = getPlayerById(players, server.id);
+                    // console.log("%cclient prediction: " + index, "color: blue");
 
-        // inputBufer.forEach((element, i) => {
-        //     update(element.dt, element.input)
-        // });
-
-        // stateBufer.splice(0, serverTik)
-        // inputBufer.splice(0, serverTik)
-
+                }
+            }
+            stateBufer.splice(0, serverTik + 1)
+            inputBufer.splice(0, serverTik + 1)
+        }
     })
 
 
@@ -151,8 +153,6 @@ function main() {
 
         dt = (now1 - lastTime) / 1000;
 
-        var currentFps = Math.round(1000 / (now1 - lastTime));
-
         update(dt, window.input);
         render();
 
@@ -167,17 +167,19 @@ function main() {
             stateBufer[tik] = getPlayer().pos;
         }
 
-
-        lastTime = now1;
-        tik++;
-
-
+        if (!(tik % 5)) {
+            currentFps = Math.round(1000 / (now1 - lastTime));
+            gameTime = Math.round((sinceStart / 1000) * 100) / 100
+        }
 
         ctx.fillStyle = "white"
         ctx.font = "18px arial";
-        ctx.fillText("time: "
-            + Math.round((sinceStart / 1000) * 100) / 100, 350, 20);
+        ctx.fillText("time: " + gameTime, 350, 20);
         ctx.fillText("fps:   " + currentFps, 350, 40);
+
+
+        lastTime = now1;
+        tik++;
 
     }
 }
@@ -195,13 +197,13 @@ function init() {
 }
 
 // Update game objects
-function update(dt, input) {
-    handleInput(dt, input);
+function update(dt) {
+    handleInput(dt, window.input);
     updateEntities(dt);
 
 };
 
-function handleInput(dt, input) {
+function handleInput(dt, a) {
     const player = getPlayer();
     let delta = playerSpeed * dt;
 
@@ -369,6 +371,7 @@ function reset() {
 };
 
 function getPlayer() {
+    // return players.find(player => player.id == playerId);
     return players.find(player => player.id == "asdasd");
 }
 
