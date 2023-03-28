@@ -129,7 +129,9 @@ function main() {
 
         now1 = performance.now();
 
-        dt = (now1 - lastTime) / 1000;
+        dt = Math.abs((now1 - lastTime) / 1000);
+
+        console.log(now1 - lastTime);
 
         serverState.forEach((state) => {
             var player = getPlayerById(players, state.id);
