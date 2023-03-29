@@ -224,7 +224,7 @@ function update(dt, input) {
 
 };
 
-function handleInput(dt, a) {
+function handleInput(dt, input) {
     const player = getPlayer();
     let delta = playerSpeed * dt;
 
