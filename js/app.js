@@ -124,14 +124,9 @@ function main() {
 
     if (elapsed > interval) {
         then = now - (elapsed % interval);
-
         var sinceStart = now - startTime;
-
         now1 = performance.now();
-
         dt = Math.abs((now1 - lastTime) / 1000);
-
-        console.log(now1 - lastTime);
 
         serverState.forEach((state) => {
             var player = getPlayerById(players, state.id);
@@ -139,39 +134,51 @@ function main() {
             player.pos[1] = state.y
             player.changeDirection(state.dir)
 
-            var testPlayer = getPlayer()
-            testPlayer.pos[0] = state.x
-            testPlayer.pos[1] = state.y
-            testPlayer.changeDirection(state.dir)
-
             if (state.id == playerId) {
                 var serverTik = state.clientInput.tik
-                // console.log("server tik: " + serverTik + " state X : " + server.x);
 
-                console.log("start");
-                console.log("server tik: " + serverTik);
-                var inputBufferIndex = inputBufer.findIndex(input => {
-                    console.log("input tiks: " + input.tik);
-
+                var bufferIndex = inputBufer.findIndex(input => {
                     return input.tik == serverTik
                 })
-                // console.log("end");
 
-                if (!(inputBufferIndex == -1)) {
+                if (!(bufferIndex == -1)) {
 
-                    inputBufer.splice(0, inputBufferIndex + 1)
-                    inputBufer.forEach((input, i) => {
+                    var limitVal = 30;
+                    var xMin, xMax, yMin, yMax;
+                    var [sbX, sbY] = stateBufer[bufferIndex].state;
+                    xMin = sbX - limitVal
+                    xMax = sbX + limitVal
+                    yMin = sbY - limitVal
+                    yMax = sbY + limitVal
 
-                        update(input.dt, input.input)
-                    })
+                    inputBufer.splice(0, bufferIndex + 1)
+                    stateBufer.splice(0, bufferIndex + 1)
+
+                    if (
+                        state.x < xMin ||
+                        state.x > xMax ||
+                        state.y < yMin ||
+                        state.y > yMax
+                    ) {
+                        var testPlayer = getPlayer()
+                        testPlayer.pos[0] = state.x
+                        testPlayer.pos[1] = state.y
+                        testPlayer.changeDirection(state.dir)
+
+                        inputBufer.forEach((input, i) => {
+                            update(input.dt, input.input)
+                        })
+                    };
+
+
+
+
                 }
             }
 
         })
 
         serverState = []
-
-
 
         update(dt, window.input);
         render();
@@ -184,8 +191,7 @@ function main() {
             });
 
             inputBufer.push({ tik, input: window.inputManual(), dt })
-
-            // stateBufer[tik] = getPlayer().pos;
+            stateBufer.push({ tik, state: getPlayer().pos });
         }
 
         if (!(tik % 5)) {
