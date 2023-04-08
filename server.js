@@ -29,28 +29,15 @@ httpServer.listen(5000, function () {
 });
 
 // Game state
-var fps = 30;
-var frameCount = 0;
+var fps = 10;
 var interval = 1000 / fps;
-var now;
-var now1;
-var elapsed;
-var then = performance.now();
-var startTime = then;
-var lastTime;
-var dt = 0;
-var tik = 0
+let messages = [];
 
 var players = []
 var bullets = []
-var inputBuffer = []
 var playerSpeed = 200;
 var bulletSpeed = 500;
 var lastFire = performance.now();
-
-var currentFps = 0
-var gameTime = 0
-var timer = 0;
 
 io.on('connection', function (socket) {
 
@@ -62,19 +49,14 @@ io.on('connection', function (socket) {
                 socketId: socket.id,
                 x: randomInteger(10, 500),
                 y: randomInteger(10, 400),
-                dir: "LEFT",
-                clientInput: {
-                    tik: 0,
-                    input: { A: false, W: false, S: false, D: false, SPACE: false }
-                }
+                lastTik: 0
             })
         io.sockets.emit('new player', players);
     });
 
 
     socket.on('movement', function (data) {
-        var player = getPlayer(data.playerId)
-        player.clientInput = { tik: data.tik, input: data.input }
+        messages.push(data)
     })
 
     socket.on('disconnect', function (data) {
@@ -87,111 +69,81 @@ io.on('connection', function (socket) {
 
 
 function main() {
-    setImmediate(main);
+    update()
 
-    now = performance.now();
-    elapsed = now - then;
+    io.sockets.emit('state', [...players]);
 
-    if (elapsed > interval) {
-        then = now - (elapsed % interval);
-
-        var sinceStart = now - startTime;
-
-        now1 = performance.now();
-
-        dt = (now1 - lastTime) / 1000;
-
-        if (!(tik % 30)) {
-            currentFps = Math.round(1000 / (now1 - lastTime));
-            gameTime = Math.round((sinceStart / 1000) * 100) / 100
-            console.clear();
-            console.log("time: " + gameTime);
-            console.log("fps: " + currentFps)
-        }
-
-
-        update(dt)
-
-        io.sockets.emit('state', [...players]);
-
-        lastTime = now1;
-        tik++;
-
-        inputBuffer = [];
-
-
-    }
 }
 
-function update(dt) {
+function update() {
 
-    updatePlayers(dt)
+    handleInput()
     // updateEntities(dt)
-    checkCollisions();
+    //checkCollisions();
 }
 
-function updatePlayers(dt) {
-    players = players.map(player => {
-        return handleInput(player, dt);
-    });
-}
+function handleInput() {
 
-function handleInput(player, dt) {
-    let delta = playerSpeed * dt;
+    // [ dir, playerId, tik, dt ]
+    messages.forEach(message => {
+        let { dir, playerId, tik, delta } = message;
 
-    var data = player.clientInput.input;
+        var player = getPlayer(playerId)
 
-    if (data.SPACE && Date.now() - lastFire > 300) {
-        var x = player.x + 19;
-        var y = player.y + 19;
+        let dt = playerSpeed * delta;
 
-        var mx = data.mouse.x;
-        var my = data.mouse.y;
-        var vx = mx - x;
-        var vy = my - y;
+        // if (input.SPACE && Date.now() - lastFire > 300) {
+        //     var x = player.x + 19;
+        //     var y = player.y + 19;
 
-        var dist = Math.sqrt(vx * vx + vy * vy);
-        var dx = vx / dist;
-        var dy = vy / dist;
+        //     var mx = input.mouse.x;
+        //     var my = input.mouse.y;
+        //     var vx = mx - x;
+        //     var vy = my - y;
 
-        var angle = Math.atan2(vx, vy);
+        //     var dist = Math.sqrt(vx * vx + vy * vy);
+        //     var dx = vx / dist;
+        //     var dy = vy / dist;
 
-        const bullet = {
-            id: randomInteger(1000, 10000),
-            playerId: player.id,
-            pos: [x, y],
-            way: [dx, dy],
-            dir: -angle + 1.5,
+        //     var angle = Math.atan2(vx, vy);
+
+        //     const bullet = {
+        //         id: randomInteger(1000, 10000),
+        //         playerId: player.id,
+        //         pos: [x, y],
+        //         way: [dx, dy],
+        //         dir: -angle + 1.5,
+        //     }
+
+        //     bullets.push({ ...bullet });
+
+        //     lastFire = Date.now();
+
+        //     return { ...player, bullet: { ...bullet } }
+        // }
+
+        player.lastTik = tik
+
+        switch (dir) {
+            case 'DOWN':
+                player.y += dt;
+                break;
+            case 'UP':
+                player.y -= dt;
+                break;
+            case 'LEFT':
+                player.x -= dt;
+                break;
+            case 'RIGHT':
+                player.x += dt;
+                break;
+            default:
+                break;
         }
+    });
 
-        bullets.push({ ...bullet });
+    messages = []
 
-        lastFire = Date.now();
-
-        return { ...player, bullet: { ...bullet } }
-    }
-
-    if (data.S) {
-        player.y += delta;
-        player.dir = 'DOWN'
-    }
-
-    if (data.W) {
-        player.y -= delta;
-        player.dir = 'UP'
-    }
-
-    if (data.A) {
-        player.x -= delta;
-        player.dir = 'LEFT'
-    }
-
-    if (data.D) {
-        player.x += delta;
-        player.dir = 'RIGHT'
-    }
-
-    return player
 }
 
 function updateEntities(dt) {
@@ -286,4 +238,4 @@ function randomInteger(min, max) {
     return Math.round(rand);
 }
 
-main()
+setInterval(() => { main() }, interval);

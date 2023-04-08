@@ -37,7 +37,7 @@ var playerId;
 var tik = 0;
 var stateBufer = [];
 var inputBufer = [];
-var serverState = []
+var messages = []
 
 var lastFire = Date.now();
 var gameTime = 0;
@@ -65,7 +65,7 @@ socket.on('new player', function (data) {
 });
 
 socket.on('state', function (data) {
-    serverState = data
+    messages.push(data);
 })
 
 
@@ -128,71 +128,62 @@ function main() {
         now1 = performance.now();
         dt = Math.abs((now1 - lastTime) / 1000);
 
-        serverState.forEach((state) => {
-            var player = getPlayerById(players, state.id);
-            player.pos[0] = state.x
-            player.pos[1] = state.y
-            player.changeDirection(state.dir)
+        messages.forEach((message) => {
+            message.forEach(state => {
+                var player = getPlayerById(players, state.id);
+                player.pos[0] = state.x
+                player.pos[1] = state.y
 
-            if (state.id == playerId) {
-                var serverTik = state.clientInput.tik
+                if (state.id == playerId) {
+                    var serverTik = state.lastTik
 
-                var bufferIndex = inputBufer.findIndex(input => {
-                    return input.tik == serverTik
-                })
+                    var bufferIndex = inputBufer.findIndex(input => {
+                        return input.tik == serverTik
+                    })
 
-                if (!(bufferIndex == -1)) {
+                    if (!(bufferIndex == -1)) {
 
-                    var limitVal = 30;
-                    var xMin, xMax, yMin, yMax;
-                    var [sbX, sbY] = stateBufer[bufferIndex].state;
-                    xMin = sbX - limitVal
-                    xMax = sbX + limitVal
-                    yMin = sbY - limitVal
-                    yMax = sbY + limitVal
+                        var limitVal = 30;
+                        var xMin, xMax, yMin, yMax;
+                        var [sbX, sbY] = stateBufer[bufferIndex].state;
+                        xMin = sbX - limitVal
+                        xMax = sbX + limitVal
+                        yMin = sbY - limitVal
+                        yMax = sbY + limitVal
 
-                    inputBufer.splice(0, bufferIndex + 1)
-                    stateBufer.splice(0, bufferIndex + 1)
+                        inputBufer.splice(0, bufferIndex + 1)
+                        stateBufer.splice(0, bufferIndex + 1)
 
-                    if (
-                        state.x < xMin ||
-                        state.x > xMax ||
-                        state.y < yMin ||
-                        state.y > yMax
-                    ) {
-                        var testPlayer = getPlayer()
-                        testPlayer.pos[0] = state.x
-                        testPlayer.pos[1] = state.y
-                        testPlayer.changeDirection(state.dir)
+                        if (
+                            state.x < xMin ||
+                            state.x > xMax ||
+                            state.y < yMin ||
+                            state.y > yMax
+                        ) {
+                            var testPlayer = getPlayer()
+                            testPlayer.pos[0] = state.x
+                            testPlayer.pos[1] = state.y
+                            testPlayer.changeDirection(state.dir)
 
-                        inputBufer.forEach((input, i) => {
-                            update(input.dt, input.input)
-                        })
-                    };
-
-
+                            // inputBufer.forEach((input, i) => {
+                            //     update(input.dt, input.input)
+                            // })
+                        };
 
 
+
+
+                    }
                 }
-            }
+            });
 
         })
 
-        serverState = []
+        messages = []
 
-        update(dt, window.input);
+        update(dt, window.input, tik);
+
         render();
-
-        if (players.length) {
-            socket.emit('movement', {
-                tik,
-                playerId,
-                input: window.inputManual()
-            });
-
-            inputBufer.push({ tik, input: window.inputManual(), dt })
-            stateBufer.push({ tik, state: getPlayer().pos });
-        }
 
         if (!(tik % 5)) {
             currentFps = Math.round(1000 / (now1 - lastTime));
@@ -224,59 +215,40 @@ function init() {
 }
 
 // Update game objects
-function update(dt, input) {
-    handleInput(dt, input);
+function update(dt, input, tik) {
+    handleInput(dt, input, tik);
     updateEntities(dt);
 
 };
 
-function handleInput(dt, input) {
+function handleInput(dt, keys, tik) {
+    var input
+    if (isDown('s', keys)) {
+        input = { dir: 'DOWN' }
+    }
+    else if (isDown('w', keys)) {
+        input = { dir: 'UP' }
+    } else if (isDown('d', keys)) {
+        input = { dir: 'RIGHT' }
+    }
+    else if (isDown('a', keys)) {
+        input = { dir: 'LEFT' }
+    }
+    else {
+        return
+    }
+
+    input.tik = tik
+    input.delta = dt
+    input.playerId = playerId
+
     const player = getPlayer();
-    let delta = playerSpeed * dt;
+    player.move(input)
 
-    if (isDown('w', input) && isDown('d', input)) {
-        player.move('UP-RIGHT', delta)
-        return
-    }
+    socket.emit('movement', input);
 
-    if (isDown('w', input) && isDown('a', input)) {
-        player.move('UP-LEFT', delta)
-        return
-    }
-
-    if (isDown('s', input) && isDown('d', input)) {
-        player.move('DOWN-RIGHT', delta)
-        return
-    }
-
-    if (isDown('s', input) && isDown('a', input)) {
-        player.move('DOWN-LEFT', delta)
-        return
-    }
-
-    if (isDown('s', input)) {
-        player.move('DOWN', delta)
-        return
-    }
-
-    if (isDown('d', input)) {
-        player.move('RIGHT', delta)
-        return
-    }
-
-    if (isDown('w', input)) {
-        player.move('UP', delta)
-        return
-    }
-
-    if (isDown('a', input)) {
-        player.move('LEFT', delta)
-        return
-    }
-
-    if (isDown('d', input)) {
-        player.move('RIGHT', delta)
-    }
+    inputBufer.push(input)
+    stateBufer.push({ tik, state: getPlayer().pos });
 }
 
 function updateEntities(dt) {
