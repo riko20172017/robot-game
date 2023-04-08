@@ -5,9 +5,11 @@ export default class Player {
         this.id = id;
         this.pos = [x, y];
         this.sprite = new Sprite('img/player.png', [0, 0], [39, 39], 16, [0, 1])
+        this.speed = 200
     }
 
-    move(dir, delta) {
+    move({ dir, delta }) {
+        delta = delta * this.speed;
         switch (dir) {
             case 'DOWN':
                 this.pos[1] += delta;
