@@ -1,36 +1,7 @@
 // Зависимости
-import express from 'express';
-import { createServer } from "http";
-import path from 'path';
-import { Server } from "socket.io";
-import { uid } from 'uid'
-import { fileURLToPath } from 'url';
-import { performance } from 'perf_hooks';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-var app = express();
-var httpServer = createServer(app);
-var io = new Server(httpServer);
-
-
-app.set('port', 5000);
-app.use('/', express.static(__dirname + '/'));
-
-// Маршруты
-app.get('/', function (request, response) {
-    response.sendFile(path.join(__dirname, 'index.html'));
-});
-
-// Запуск сервера
-httpServer.listen(5000, function () {
-    console.log('Запускаю сервер на порте 5000');
-});
+import { performance } from 'perf_hooks'
 
 // Game state
-var fps = 10;
-var interval = 1000 / fps;
 let messages = [];
 
 var players = []
@@ -39,112 +10,105 @@ var playerSpeed = 200;
 var bulletSpeed = 500;
 var lastFire = performance.now();
 
-io.on('connection', function (socket) {
+class Server {
+    constructor() {
+        this.clients = [];
+        this.entities = [];
+        this.network = new Network()
 
-    socket.on('new player', function () {
-        var id = uid()
-        players.push(
-            {
-                id,
-                socketId: socket.id,
-                x: randomInteger(10, 500),
-                y: randomInteger(10, 400),
-                lastTik: 0
-            })
-        io.sockets.emit('new player', players);
-    });
+        this.network.init(this)
+        // Default update rate.
+        this.setUpdateRate(10);
+    }
+
+    setUpdateRate(hz) {
+        this.update_rate = hz;
+
+        clearInterval(this.update_interval);
+        this.interval = setInterval(
+            (function (self) { return function () { self.update(); }; })(this),
+            1000 / this.update_rate);
+    }
+
+    update() {
+        this.handleInput()
+        // updateEntities(dt)
+        //checkCollisions();
+        this.sendState();
+    }
 
 
-    socket.on('movement', function (data) {
-        messages.push(data)
-    })
+    handleInput() {
 
-    socket.on('disconnect', function (data) {
-        if (!players.length) return
-        players = players.filter(player => player.socketId != socket.id)
-        io.sockets.emit('new player', players)
-    })
+        // [ dir, playerId, tik, dt ]
+        messages.forEach(message => {
+            let { dir, playerId, tik, delta } = message;
 
-});
+            var player = getPlayer(playerId)
 
+            let dt = playerSpeed * delta;
 
-function main() {
-    update()
+            // if (input.SPACE && Date.now() - lastFire > 300) {
+            //     var x = player.x + 19;
+            //     var y = player.y + 19;
 
-    io.sockets.emit('state', [...players]);
+            //     var mx = input.mouse.x;
+            //     var my = input.mouse.y;
+            //     var vx = mx - x;
+            //     var vy = my - y;
 
+            //     var dist = Math.sqrt(vx * vx + vy * vy);
+            //     var dx = vx / dist;
+            //     var dy = vy / dist;
+
+            //     var angle = Math.atan2(vx, vy);
+
+            //     const bullet = {
+            //         id: randomInteger(1000, 10000),
+            //         playerId: player.id,
+            //         pos: [x, y],
+            //         way: [dx, dy],
+            //         dir: -angle + 1.5,
+            //     }
+
+            //     bullets.push({ ...bullet });
+
+            //     lastFire = Date.now();
+
+            //     return { ...player, bullet: { ...bullet } }
+            // }
+
+            player.lastTik = tik
+
+            switch (dir) {
+                case 'DOWN':
+                    player.y += dt;
+                    break;
+                case 'UP':
+                    player.y -= dt;
+                    break;
+                case 'LEFT':
+                    player.x -= dt;
+                    break;
+                case 'RIGHT':
+                    player.x += dt;
+                    break;
+                default:
+                    break;
+            }
+        });
+
+        messages = []
+
+    }
+
+    sendState() {
+        network.io.sockets.emit('state', [...players]);
+    }
 }
 
-function update() {
+new Server()
 
-    handleInput()
-    // updateEntities(dt)
-    //checkCollisions();
-}
-
-function handleInput() {
-
-    // [ dir, playerId, tik, dt ]
-    messages.forEach(message => {
-        let { dir, playerId, tik, delta } = message;
-
-        var player = getPlayer(playerId)
-
-        let dt = playerSpeed * delta;
-
-        // if (input.SPACE && Date.now() - lastFire > 300) {
-        //     var x = player.x + 19;
-        //     var y = player.y + 19;
-
-        //     var mx = input.mouse.x;
-        //     var my = input.mouse.y;
-        //     var vx = mx - x;
-        //     var vy = my - y;
-
-        //     var dist = Math.sqrt(vx * vx + vy * vy);
-        //     var dx = vx / dist;
-        //     var dy = vy / dist;
-
-        //     var angle = Math.atan2(vx, vy);
-
-        //     const bullet = {
-        //         id: randomInteger(1000, 10000),
-        //         playerId: player.id,
-        //         pos: [x, y],
-        //         way: [dx, dy],
-        //         dir: -angle + 1.5,
-        //     }
-
-        //     bullets.push({ ...bullet });
-
-        //     lastFire = Date.now();
-
-        //     return { ...player, bullet: { ...bullet } }
-        // }
-
-        player.lastTik = tik
-
-        switch (dir) {
-            case 'DOWN':
-                player.y += dt;
-                break;
-            case 'UP':
-                player.y -= dt;
-                break;
-            case 'LEFT':
-                player.x -= dt;
-                break;
-            case 'RIGHT':
-                player.x += dt;
-                break;
-            default:
-                break;
-        }
-    });
-
-    messages = []
-
-}
 
 function updateEntities(dt) {
     // Update all the bullets
@@ -237,5 +201,3 @@ function randomInteger(min, max) {
     let rand = min - 0.5 + Math.random() * (max - min + 1);
     return Math.round(rand);
 }
-
-setInterval(() => { main() }, interval);

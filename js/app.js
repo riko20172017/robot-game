@@ -53,14 +53,15 @@ var dt = 0;
 
 var socket = io();
 
-socket.emit('new player');
+socket.emit('DISCOVER');
 
-socket.on('new player', function (data) {
-    players = data.map((player) => {
-        if (socket.id == player.socketId) playerId = player.id
-        return new Player(player.id, player.x, player.y)
-    });
-    players.push(new PlayerTest("asdasd", data[0].x, data[0].y))
+socket.on('OFFER', function (data) {
+    playerId = data.playerId;
+    // players = data.map((player) => {
+    //     if (socket.id == player.socketId) playerId = player.id
+    //     return new Player(player.id, player.x, player.y)
+    // });
+    // players.push(new PlayerTest("asdasd", data[0].x, data[0].y))
 
 });
 
