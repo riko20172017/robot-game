@@ -1,10 +1,12 @@
 import httpServer from "./http.js"
 import { Server as Socket } from "socket.io"
-import { uid } from 'uid'
+import { uid as uidd } from 'uid'
 
 class Network {
     constructor() {
         this.messages = []
+        this.clients = []
+        this.entities = []
         this.io = new Socket(httpServer);
     }
 
@@ -12,7 +14,7 @@ class Network {
         this.io.on('connection', function (socket) {
 
             socket.on('DISCOVER', function (socket) {
-                let uid = uid()
+                let uid = uidd()
                 let socketId = socket.id
 
                 socket.emit('OFFER', uid)

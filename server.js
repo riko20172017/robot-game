@@ -1,5 +1,7 @@
 // Зависимости
 import { performance } from 'perf_hooks'
+import Network from "./network.js";
+
 
 // Game state
 let messages = [];
@@ -103,7 +105,7 @@ class Server {
     }
 
     sendState() {
-        network.io.sockets.emit('state', [...players]);
+        this.network.io.sockets.emit('state', [...players]);
     }
 }
 
