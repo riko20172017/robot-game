@@ -4,7 +4,6 @@ import Network from "./network.js";
 
 
 // Game state
-let messages = [];
 
 var players = []
 var bullets = []
@@ -13,11 +12,12 @@ var bulletSpeed = 500;
 var lastFire = performance.now();
 
 class Server {
-    constructor() {
-        this.clients = [];
-        this.entities = [];
-        this.network = new Network()
 
+    clients = [];
+    entities = [];
+
+    constructor() {
+        this.network = new Network()
         this.network.init(this)
         // Default update rate.
         this.setUpdateRate(10);
@@ -41,12 +41,11 @@ class Server {
 
 
     handleInput() {
-
         // [ dir, playerId, tik, dt ]
-        messages.forEach(message => {
-            let { dir, playerId, tik, delta } = message;
+        this.network.messages.forEach(message => {
+            let { dir, uid, tik, delta } = message;
 
-            var player = getPlayer(playerId)
+            var entity = this.getEntity(uid)
 
             let dt = playerSpeed * delta;
 
@@ -80,32 +79,36 @@ class Server {
             //     return { ...player, bullet: { ...bullet } }
             // }
 
-            player.lastTik = tik
+            entity.lastTik = tik
 
             switch (dir) {
                 case 'DOWN':
-                    player.y += dt;
+                    entity.y += dt;
                     break;
                 case 'UP':
-                    player.y -= dt;
+                    entity.y -= dt;
                     break;
                 case 'LEFT':
-                    player.x -= dt;
+                    entity.x -= dt;
                     break;
                 case 'RIGHT':
-                    player.x += dt;
+                    entity.x += dt;
                     break;
                 default:
                     break;
             }
         });
 
-        messages = []
+        this.network.messages = []
 
     }
 
     sendState() {
-        this.network.io.sockets.emit('state', [...players]);
+        this.network.io.sockets.emit('state', [...this.entities]);
+    }
+
+    getEntity(uid) {
+        return this.entities.find(entity => entity.uid == uid)
     }
 }
 
@@ -194,12 +197,6 @@ function getPlayerId(socketId) {
     throw "Player not exist"
 }
 
-function getPlayer(playerId) {
+function getEntities(playerId) {
     return players.find(player => player.id == playerId)
-}
-
-function randomInteger(min, max) {
-    // получить случайное число от (min-0.5) до (max+0.5)
-    let rand = min - 0.5 + Math.random() * (max - min + 1);
-    return Math.round(rand);
 }

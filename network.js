@@ -11,9 +11,10 @@ class Network {
     }
 
     init(server) {
+        let network = this;
         this.io.on('connection', function (socket) {
 
-            socket.on('DISCOVER', function (socket) {
+            socket.on('DISCOVER', function (data) {
                 let uid = uidd()
                 let socketId = socket.id
 
@@ -29,17 +30,27 @@ class Network {
             })
 
             socket.on('movement', function (data) {
-                this.messages.push(data)
+                network.messages.push(data)
             })
 
             socket.on('disconnect', function (data) {
-                if (!players.length) return
-                players = players.filter(player => player.socketId != socket.id)
-                this.io.sockets.emit('new player', players)
+                var client = server.clients.find(({ socketId }) => socketId == socket.id)
+                server.clients = server.clients.filter(({ socketId }) => {
+                    return socketId !== socket.id
+                })
+                server.entities = server.entities.filter(({ uid }) => {
+                    return uid !== client.uid
+                })
             })
 
         });
     }
+}
+
+function randomInteger(min, max) {
+    // получить случайное число от (min-0.5) до (max+0.5)
+    let rand = min - 0.5 + Math.random() * (max - min + 1);
+    return Math.round(rand);
 }
 
 export default Network

@@ -56,13 +56,9 @@ var socket = io();
 socket.emit('DISCOVER');
 
 socket.on('OFFER', function (data) {
-    playerId = data.playerId;
-    // players = data.map((player) => {
-    //     if (socket.id == player.socketId) playerId = player.id
-    //     return new Player(player.id, player.x, player.y)
-    // });
-    // players.push(new PlayerTest("asdasd", data[0].x, data[0].y))
-
+    playerId = data
+    players.push(new Player(playerId, 0, 0))
+    players.push(new PlayerTest("asdasd", 0, 0))
 });
 
 socket.on('state', function (data) {
@@ -131,11 +127,11 @@ function main() {
 
         messages.forEach((message) => {
             message.forEach(state => {
-                var player = getPlayerById(players, state.id);
+                var player = getPlayerById(players, state.uid);
                 player.pos[0] = state.x
                 player.pos[1] = state.y
 
-                if (state.id == playerId) {
+                if (state.uid == playerId) {
                     var serverTik = state.lastTik
 
                     var bufferIndex = inputBufer.findIndex(input => {
@@ -170,10 +166,6 @@ function main() {
                             //     update(input.dt, input.input)
                             // })
                         };
-
-
-
-
                     }
                 }
             });
@@ -241,7 +233,7 @@ function handleInput(dt, keys, tik) {
 
     input.tik = tik
     input.delta = dt
-    input.playerId = playerId
+    input.uid = playerId
 
     const player = getPlayer();
     player.move(input)
