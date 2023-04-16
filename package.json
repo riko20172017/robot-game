@@ -5,7 +5,8 @@
   "description": "A simple starting point for writing 2d games. See tutorial.md for more information.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node .\\dist\\Server.js"
   },
   "repository": {
     "type": "git",
@@ -21,6 +22,8 @@
     "express": "^4.18.2",
     "socket.io": "^4.6.0",
     "uid": "^2.0.1"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.17"
   }
-  
 }

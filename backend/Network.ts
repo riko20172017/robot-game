@@ -1,16 +1,19 @@
-import httpServer from "./http.js"
+import httpServer from "./httpserver.js"
 import { Server as Socket } from "socket.io"
 import { uid as uidd } from 'uid'
+import { Message } from "./Interfaces.js"
+import Server from "./Server.js"
 
 class Network {
+    messages: Array<Message>
+    io: Socket
+
     constructor() {
         this.messages = []
-        this.clients = []
-        this.entities = []
         this.io = new Socket(httpServer);
     }
 
-    init(server) {
+    init(server: Server) {
         let network = this;
         this.io.on('connection', function (socket) {
 
@@ -35,11 +38,18 @@ class Network {
 
             socket.on('disconnect', function (data) {
                 var client = server.clients.find(({ socketId }) => socketId == socket.id)
+                
+                if (client === undefined) {
+                    console.log("can`t disconnect: client is undefined");
+                    return
+                }
+
                 server.clients = server.clients.filter(({ socketId }) => {
-                    return socketId !== socket.id
+                    return socketId !== client?.socketId
                 })
+
                 server.entities = server.entities.filter(({ uid }) => {
-                    return uid !== client.uid
+                    return uid !== client?.uid
                 })
             })
 
@@ -47,7 +57,7 @@ class Network {
     }
 }
 
-function randomInteger(min, max) {
+function randomInteger(min: number, max: number) {
     // получить случайное число от (min-0.5) до (max+0.5)
     let rand = min - 0.5 + Math.random() * (max - min + 1);
     return Math.round(rand);
