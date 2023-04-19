@@ -1,6 +1,7 @@
 import Sprite from "../sprite.js";
+import Entity from "./Entity.js"
 
-export default class Player {
+class Player extends Entity {
     constructor(id, x, y) {
         this.id = id;
         this.pos = [x, y];
@@ -48,3 +49,5 @@ export default class Player {
         this.sprite.dir = dir
     }
 }
+
+export default Player
