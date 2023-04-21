@@ -37,7 +37,7 @@ class Client {
         this.stateBufer = []
         this.lastFire = Date.now();
         this.server_reconciliation = true
-        this.entity_interpolation = false
+        this.entity_interpolation = true
         this.tik = 0
         this.network = new Network()
         this.input = new Input()
@@ -46,8 +46,20 @@ class Client {
     }
 
     update(dt: number) {
+        // Listen to the server.
         this.processServerMessages();
+
+        if (this.playerId == "") {
+            return;  // Not connected yet.
+        }
+
         this.processInputs(dt, this.input.getKeys());
+
+        // Interpolate other entities.
+        if (this.entity_interpolation) {
+            this.interpolateEntities();
+        }
+
         this.updateEntities(dt);
     }
 
@@ -57,12 +69,12 @@ class Client {
 
     processServerMessages() {
 
-        while /*➿*/(true) {
+        while (true) {/*➿*/
             let message = this.network.receive()
             if (!message) break; /*⛔*/
 
             // World state is a list of entity states.
-            for (var i = 0; i < message.length; i++) {
+            for (var i = 0; i < message.length; i++) {/*➿*/
                 var state = message[i];
 
                 // If this is the first time we see this entity, create a local representation.
@@ -91,7 +103,7 @@ class Client {
 
                     if (this.server_reconciliation) {
                         var j = 0;
-                        while (j < this.pending_inputs.length) {
+                        while (j < this.pending_inputs.length) {    /*➿*/
                             let input = this.pending_inputs[j];
                             if (input.tik <= state.lastTik) {
                                 // Already processed. Its effect is already taken into account into the world update
@@ -100,7 +112,7 @@ class Client {
                             }
                             else {
                                 // Not processed by the server yet. Re-apply it.
-                                player.move(input.dir, input.delta)
+                                player.applyInput(input.dir, input.delta)
                                 j++;
                             }
                         }
@@ -119,64 +131,11 @@ class Client {
                     } else {
                         // Add it to the position buffer.
                         var timestamp = +new Date();
-                        // entity.position_buffer.push([timestamp, state.position]);
+                        player.position_buffer.push([timestamp, state.x, state.y]);
                     }
                 }
-
             }
-
         }
-        // this.network.messages.forEach((message: Array<State>) => {
-        //     message.forEach(state => {
-        //         var player = getPlayerById(this.players, state.uid);
-        //         if (!player) {
-        //             console.log("Player ${state.uid} is not exist");
-        //             return
-        //         }
-        //         player.pos[0] = state.x
-        //         player.pos[1] = state.y
-
-        //         if (state.uid == this.playerId) {
-        //             var serverTik = state.lastTik
-
-        //             var bufferIndex = this.pending_inputs.findIndex(input => {
-        //                 return input.tik == serverTik
-        //             })
-
-        //             if (!(bufferIndex == -1)) {
-
-        //                 var limitVal = 30;
-        //                 var xMin, xMax, yMin, yMax;
-        //                 var [sbX, sbY] = this.stateBufer[bufferIndex].state;
-        //                 xMin = sbX - limitVal
-        //                 xMax = sbX + limitVal
-        //                 yMin = sbY - limitVal
-        //                 yMax = sbY + limitVal
-
-        //                 this.pending_inputs.splice(0, bufferIndex + 1)
-        //                 this.stateBufer.splice(0, bufferIndex + 1)
-
-        //                 if (
-        //                     state.x < xMin ||
-        //                     state.x > xMax ||
-        //                     state.y < yMin ||
-        //                     state.y > yMax
-        //                 ) {
-        //                     var testPlayer = this.getPlayer("asdasd")
-        //                     if (testPlayer) {
-        //                         testPlayer.pos[0] = state.x
-        //                         testPlayer.pos[1] = state.y
-        //                         testPlayer.changeDirection(state.dir)
-        //                     }
-
-        //                     // inputBufer.forEach((input, i) => {
-        //                     //     update(input.dt, input.input)
-        //                     // })
-        //                 };
-        //             }
-        //         }
-        //     });
-        // })
 
         this.network.messages = []
     }
@@ -211,7 +170,7 @@ class Client {
             return
         }
 
-        player.move(dir, delta)
+        player.applyInput(dir, delta)
 
         this.network.socket.emit('movement', input);
 
@@ -267,6 +226,43 @@ class Client {
             if (this.explosions[i].sprite.done) {
                 this.explosions.splice(i, 1);
                 i--;
+            }
+        }
+    }
+
+    interpolateEntities() {
+
+        // Compute render timestamp.
+        var now = +new Date();
+        var render_timestamp = now - (1000.0 / 30);
+
+        for (var i in this.players) {
+            var player = this.players[i];
+
+            // No point in interpolating this client's entity.
+            if (player.id == this.playerId && player.id == "asdasd") {
+                continue;
+            }
+
+            // Find the two authoritative positions surrounding the rendering timestamp.
+            var buffer = player.position_buffer;
+
+            // Drop older positions.
+            while (buffer.length >= 2 && buffer[1][0] <= render_timestamp) {
+                buffer.shift();
+            }
+
+            // Interpolate between the two surrounding authoritative positions.
+            if (buffer.length >= 2 && buffer[0][0] <= render_timestamp && render_timestamp <= buffer[1][0]) {
+                var x0 = buffer[0][1];
+                var x1 = buffer[1][1];
+                var y0 = buffer[0][2];
+                var y1 = buffer[1][2];
+                var t0 = buffer[0][0];
+                var t1 = buffer[1][0];
+
+                player.pos[0] = x0 + (x1 - x0) * (render_timestamp - t0) / (t1 - t0);
+                player.pos[1] = y0 + (y1 - y0) * (render_timestamp - t0) / (t1 - t0);
             }
         }
     }

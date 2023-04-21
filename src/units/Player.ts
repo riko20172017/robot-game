@@ -2,15 +2,18 @@ import Sprite from "../Sprite.js";
 import Entity from "./Entity.js"
 
 class Player extends Entity {
+    position_buffer: number[][]
     constructor(id: string, x: number, y: number) {
         super(id, x, y)
         this.id = id;
         this.pos = [x, y];
         this.sprite = new Sprite('img/player.png', [0, 0], [39, 39], 16, [0, 1])
         this.speed = 200
+        this.position_buffer = []
+
     }
 
-    move(dir: string, delta: number) {
+    applyInput(dir: string, delta: number) {
         delta = delta * this.speed;
         switch (dir) {
             case 'DOWN':
