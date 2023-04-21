@@ -1,4 +1,4 @@
-import Sprite from "../sprite.js";
+import Sprite from "../Sprite.js";
 import Entity from "./Entity.js"
 
 class Bullet extends Entity {
