@@ -1,24 +1,26 @@
 class Resources {
+    resourceCache: any;
+    readyCallbacks: any[];
     constructor() {
         this.resourceCache = {};
-        this.loading = [];
         this.readyCallbacks = [];
-        window.resources = this
+
+        (<any>window).resources = this
     }
 
     // Load an image url or an array of image urls
-    load(urlOrArr) {
-        if (urlOrArr instanceof Array) {
-            urlOrArr.forEach(function (url) {
+    load(arrOfUrl: string[]) {
+        if (arrOfUrl instanceof Array) {
+            arrOfUrl.forEach(function (this: Resources, url: string) {
                 this._load(url);
             }, this);
         }
         else {
-            this._load(urlOrArr);
+            this._load(arrOfUrl);
         }
     }
 
-    _load(url) {
+    _load(url: string) {
         if (this.resourceCache[url]) {
             return this.resourceCache[url];
         }
@@ -37,7 +39,7 @@ class Resources {
         }
     }
 
-    get(url) {
+    get(url: string) {
         return this.resourceCache[url];
     }
 
@@ -52,7 +54,7 @@ class Resources {
         return ready;
     }
 
-    onReady(func) {
+    onReady(func: Function) {
         this.readyCallbacks.push(func);
     }
 }

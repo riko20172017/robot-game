@@ -1,5 +1,21 @@
+import Resources from "./Resources";
+
+declare global {
+    interface Window { resources: Resources; }
+}
+
 export default class Sprite {
-    constructor(url, pos, size, speed, frames, dir, once) {
+    pos: number[];
+    size: number[];
+    speed: number;
+    frames: number[];
+    _index: number;
+    url: string;
+    dir: string;
+    once: boolean;
+    done: boolean
+
+    constructor(url: string, pos: number[], size: number[], speed: number, frames: number[], dir?: string, once?: boolean) {
         this.pos = pos;
         this.size = size;
         this.speed = typeof speed === 'number' ? speed : 0;
@@ -7,14 +23,15 @@ export default class Sprite {
         this._index = 0;
         this.url = url;
         this.dir = dir || 'horizontal';
-        this.once = once;
+        this.once = once || false;
+        this.done = false
     }
 
-    update(dt) {
+    update(dt: number) {
         this._index += this.speed * dt;
     }
 
-    render(ctx) {
+    render(ctx: CanvasRenderingContext2D) {
         var frame;
 
         if (this.speed > 0) {
@@ -79,13 +96,13 @@ export default class Sprite {
         //     x += frame * this.size[0];
         // }
 
-      //  if (typeof this.dir == 'number') {
-            // ctx.save()
-            // ctx.rotate(this.dir)
+        //  if (typeof this.dir == 'number') {
+        // ctx.save()
+        // ctx.rotate(this.dir)
 
-      //  }
+        //  }
 
-        ctx.drawImage(resources.get(this.url),
+        ctx.drawImage(window.resources.get(this.url),
             x, y,
             this.size[0], this.size[1],
             0, 0,

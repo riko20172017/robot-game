@@ -1,3 +1,4 @@
+import { Keys } from "src/Input.js";
 import Sprite from "../Sprite.js"
 
 class Entity {
@@ -16,7 +17,6 @@ class Entity {
     }
 
     changeDirection(dir: string) { }
-    move(input: Input) { }
 }
 
 export default Entity

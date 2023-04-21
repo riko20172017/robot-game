@@ -1,24 +1,28 @@
-import Player from "./units/player.js";
-import PlayerTest from "./units/playerTest.js";
+import Client from "./Client.js";
+import { Player, PlayerTest } from "./units/Player.js";
+import { io, Socket } from "socket.io-client";
 
 class Network {
+
+    messages: Array<Array<State>>
+    socket: Socket<ServerToClientEvents, ClientToServerEvents>
     constructor() {
         this.messages = []
         this.socket = io();
     }
 
-    init(client) {
+    init(client: Client) {
         let network = this;
 
         this.socket.emit('DISCOVER');
 
-        this.socket.on('OFFER', function (data) {
-            client.playerId = data
+        this.socket.on('OFFER', function (data: Offer) {
+            client.playerId = data.uid
             client.players.push(new Player(client.playerId, 0, 0))
             client.players.push(new PlayerTest("asdasd", 0, 0))
         });
 
-        this.socket.on('state', function (data) {
+        this.socket.on('state', function (data: Array<State>) {
             network.messages.push(data);
         })
 

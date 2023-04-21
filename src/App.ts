@@ -1,8 +1,9 @@
 import Client from "./Client.js";
-import Inputs from "./Inputs.js";
-import Resources from "./resources.js";
+import { Input } from "./Input.js";
+import Resources from "./Resources.js";
 import Entity from "./units/Entity.js";
-import Player from "./units/Player.js"
+import { Player } from "./units/Player.js"
+import Settings from "./Settings.js";
 
 var isGameOver;
 var gameTime = 0;
@@ -18,7 +19,7 @@ class App {
     resources: Resources;
     terrainPattern: CanvasPattern | null
     client: Client
-    inputs: Inputs
+    inputs: Input
     now: number = 0
     elapsed: number = 0
     now1: number = 0
@@ -26,7 +27,7 @@ class App {
     gameTime: number = 0
     update_interval: number
     isGameOver: boolean
-    
+
     constructor() {
         this.canvas = <HTMLCanvasElement>document.getElementById('canvas');
         this.ctx = <CanvasRenderingContext2D>this.canvas.getContext("2d");
@@ -34,10 +35,10 @@ class App {
         this.startTime = this.then;
         this.lastTime = performance.now();
         this.tik = 0
-        this.resources = new Resources(this);
+        this.resources = new Resources();
         this.terrainPattern = this.ctx.createPattern(this.resources.get('img/terrain.png'), 'repeat')
-        this.client = new Client(this.ctx, this.resources)
-        this.inputs = new Inputs()
+        this.client = new Client()
+        this.inputs = new Input()
         this.update_interval = 0
         this.isGameOver = false
 
@@ -52,8 +53,8 @@ class App {
     }
 
     init() {
-        this.canvas.width = 512;
-        this.canvas.height = 480;
+        this.canvas.width = Settings.width;
+        this.canvas.height = Settings.height;
         document.body.appendChild(this.canvas);
 
         this.main(30)

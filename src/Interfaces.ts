@@ -6,7 +6,11 @@ interface State {
     dir: string
 }
 
-interface Input {
+interface Message {
+
+}
+
+interface IInput {
     tik: number
     delta: number
     uid: string
@@ -15,4 +19,23 @@ interface Input {
 
 interface IBullet {
     way: Array<number>
+}
+
+interface Key {
+
+}
+
+interface Offer {
+    uid: string
+}
+
+interface ServerToClientEvents {
+    noArg: () => void;
+    OFFER: (data: Offer) => void;
+    state: (data: Array<State>) => void;
+}
+
+interface ClientToServerEvents {
+    DISCOVER: () => void
+    movement: (data: IInput) => void;
 }

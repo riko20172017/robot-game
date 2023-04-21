@@ -21,7 +21,7 @@ class Network {
                 let uid = uidd()
                 let socketId = socket.id
 
-                socket.emit('OFFER', uid)
+                socket.emit('OFFER', {uid})
 
                 server.clients.push({ socketId, uid })
                 server.entities.push({

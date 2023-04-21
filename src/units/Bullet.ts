@@ -1,11 +1,11 @@
 import Sprite from "../sprite.js";
 import Entity from "./Entity.js"
 
-class Bullet extends Entity implements IBullet {
+class Bullet extends Entity {
     way: number[];
 
-    constructor() {
-        super()
+    constructor(id: string, x: number, y: number) {
+        super(id, x, y)
         this.way = []
     }
 

@@ -1,5 +1,9 @@
 import Network from "./Network.js"
+import Bullet from "./units/Bullet.js";
 import Entity from "./units/Entity.js";
+import Settings from "./Settings.js";
+import { Player } from "./units/Player.js";
+import { Input, Keys } from "./Input.js";
 
 // Speed in pixels per second
 var bulletSpeed = 500;
@@ -8,8 +12,8 @@ var enemySpeed = 100;
 class Client {
 
     playerId: string
-    players: Array<Entity>
-    bullets: Array<Entity>
+    players: Array<Player>
+    bullets: Array<Bullet>
     enemies: Array<Entity>
     explosions: Array<Entity>
     inputBufer: Array<any>
@@ -17,6 +21,7 @@ class Client {
     lastFire: number
     tik: number
     network: Network
+    input: Input
 
     constructor() {
         this.playerId = ""
@@ -29,12 +34,14 @@ class Client {
         this.lastFire = Date.now();
         this.tik = 0
         this.network = new Network()
+        this.input = new Input()
+
         this.network.init(this)
     }
 
     update(dt: number) {
         this.processServerMessages();
-        this.processInputs(dt, window.input);
+        this.processInputs(dt, this.input.getKeys());
         this.updateEntities(dt);
     }
 
@@ -42,6 +49,10 @@ class Client {
         this.network.messages.forEach((message: Array<State>) => {
             message.forEach(state => {
                 var player = getPlayerById(this.players, state.uid);
+                if (!player) {
+                    console.log("Player ${state.uid} is not exist");
+                    return
+                }
                 player.pos[0] = state.x
                 player.pos[1] = state.y
 
@@ -78,7 +89,6 @@ class Client {
                                 testPlayer.changeDirection(state.dir)
                             }
 
-
                             // inputBufer.forEach((input, i) => {
                             //     update(input.dt, input.input)
                             // })
@@ -86,44 +96,42 @@ class Client {
                     }
                 }
             });
-
         })
 
         this.network.messages = []
     }
 
-    processInputs(delta: number, keys: string) {
+    processInputs(delta: number, keys: Keys) {
 
         let dir = "";
 
-        if (isDown('s', keys)) {
+        if (keys.DOWN) {
             dir = 'DOWN'
-        }
-        else if (isDown('w', keys)) {
+        } else if (keys.UP) {
             dir = 'UP'
-        } else if (isDown('d', keys)) {
+        } else if (keys.RIGHT) {
             dir = 'RIGHT'
-        }
-        else if (isDown('a', keys)) {
+        } else if (keys.LEFT) {
             dir = 'LEFT'
-        }
-        else {
+        } else {
             return
         }
 
-        let input: Input = {
+        let input: IInput = {
             tik: this.tik,
             uid: this.playerId,
-            delta: delta,
-            dir: dir
+            delta,
+            dir
         }
 
         const player = this.getPlayer();
+
         if (!player) {
             console.log("local player is not exist")
             return
         }
-        player.move(input)
+
+        player.move(dir, delta)
 
         this.network.socket.emit('movement', input);
 
@@ -152,8 +160,8 @@ class Client {
 
 
             // Remove the bullet if it goes offscreen
-            if (bullet.pos[1] < 0 || bullet.pos[1] > canvas.height ||
-                bullet.pos[0] > canvas.width) {
+            if (bullet.pos[1] < 0 || bullet.pos[1] > Settings.height ||
+                bullet.pos[0] > Settings.width) {
                 this.bullets.splice(i, 1);
                 i--;
             }
@@ -183,36 +191,32 @@ class Client {
         }
     }
 
-    getPlayer(): Entity | undefined {
+    getPlayer(): Player | undefined {
         // return players.find(player => player.id == playerId);
         return this.players.find(player => player.id == "asdasd");
     }
 
 }
 
-function checkPlayerBounds() {
-    // Check bounds
-    if (player.pos[0] < 0) {
-        player.pos[0] = 0;
-    }
-    else if (player.pos[0] > canvas.width - player.sprite.size[0]) {
-        player.pos[0] = canvas.width - player.sprite.size[0];
-    }
+// function checkPlayerBounds() {
+//     // Check bounds
+//     if (player.pos[0] < 0) {
+//         player.pos[0] = 0;
+//     }
+//     else if (player.pos[0] > canvas.width - player.sprite.size[0]) {
+//         player.pos[0] = canvas.width - player.sprite.size[0];
+//     }
 
-    if (player.pos[1] < 0) {
-        player.pos[1] = 0;
-    }
-    else if (player.pos[1] > canvas.height - player.sprite.size[1]) {
-        player.pos[1] = canvas.height - player.sprite.size[1];
-    }
-}
+//     if (player.pos[1] < 0) {
+//         player.pos[1] = 0;
+//     }
+//     else if (player.pos[1] > canvas.height - player.sprite.size[1]) {
+//         player.pos[1] = canvas.height - player.sprite.size[1];
+//     }
+// }
 
-function getPlayerById(players, playerId) {
+function getPlayerById(players: Player[], playerId: string) {
     return players.find(({ id }) => id == playerId);
-}
-
-function isDown(key, input) {
-    return input[key.toUpperCase()];
 }
 
 export default Client
