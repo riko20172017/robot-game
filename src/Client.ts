@@ -5,6 +5,8 @@ import Settings from "./Settings.js";
 import { Player } from "./units/Player.js";
 import { Input, Keys } from "./Input.js";
 
+// player id = asdasd
+
 // Speed in pixels per second
 var bulletSpeed = 500;
 var enemySpeed = 100;
@@ -16,12 +18,14 @@ class Client {
     bullets: Array<Bullet>
     enemies: Array<Entity>
     explosions: Array<Entity>
-    inputBufer: Array<any>
+    pending_inputs: IInput[]
     stateBufer: Array<any>
     lastFire: number
     tik: number
     network: Network
     input: Input
+    server_reconciliation: boolean
+    entity_interpolation: boolean
 
     constructor() {
         this.playerId = ""
@@ -29,9 +33,11 @@ class Client {
         this.bullets = []
         this.enemies = []
         this.explosions = []
-        this.inputBufer = []
+        this.pending_inputs = []
         this.stateBufer = []
         this.lastFire = Date.now();
+        this.server_reconciliation = true
+        this.entity_interpolation = false
         this.tik = 0
         this.network = new Network()
         this.input = new Input()
@@ -45,58 +51,132 @@ class Client {
         this.updateEntities(dt);
     }
 
+    havePlayer(id: string) {
+        return this.players.some((player) => player.id == id)
+    }
+
     processServerMessages() {
-        this.network.messages.forEach((message: Array<State>) => {
-            message.forEach(state => {
-                var player = getPlayerById(this.players, state.uid);
-                if (!player) {
-                    console.log("Player ${state.uid} is not exist");
-                    return
+
+        while /*➿*/(true) {
+            let message = this.network.receive()
+            if (!message) break; /*⛔*/
+
+            // World state is a list of entity states.
+            for (var i = 0; i < message.length; i++) {
+                var state = message[i];
+
+                // If this is the first time we see this entity, create a local representation.
+                if (!this.havePlayer(state.uid)) {
+                    let player = new Player(state.uid, state.x, state.y);
+                    this.players.push(player);
                 }
-                player.pos[0] = state.x
-                player.pos[1] = state.y
 
+                let player = this.getPlayer(state.uid)
+                if (!player) {
+                    console.log("there is no entity state");
+                    continue
+                }
+
+                // Received the authoritative position of this client's entity.
                 if (state.uid == this.playerId) {
-                    var serverTik = state.lastTik
+                    player.pos[0] = state.x
+                    player.pos[1] = state.y
 
-                    var bufferIndex = this.inputBufer.findIndex(input => {
-                        return input.tik == serverTik
-                    })
+                    var testPlayer = this.getPlayer("asdasd")
+                    if (testPlayer) {
+                        testPlayer.pos[0] = state.x
+                        testPlayer.pos[1] = state.y
+                        testPlayer.changeDirection(state.dir)
+                    }
 
-                    if (!(bufferIndex == -1)) {
-
-                        var limitVal = 30;
-                        var xMin, xMax, yMin, yMax;
-                        var [sbX, sbY] = this.stateBufer[bufferIndex].state;
-                        xMin = sbX - limitVal
-                        xMax = sbX + limitVal
-                        yMin = sbY - limitVal
-                        yMax = sbY + limitVal
-
-                        this.inputBufer.splice(0, bufferIndex + 1)
-                        this.stateBufer.splice(0, bufferIndex + 1)
-
-                        if (
-                            state.x < xMin ||
-                            state.x > xMax ||
-                            state.y < yMin ||
-                            state.y > yMax
-                        ) {
-                            var testPlayer = this.getPlayer()
-                            if (testPlayer) {
-                                testPlayer.pos[0] = state.x
-                                testPlayer.pos[1] = state.y
-                                testPlayer.changeDirection(state.dir)
+                    if (this.server_reconciliation) {
+                        var j = 0;
+                        while (j < this.pending_inputs.length) {
+                            let input = this.pending_inputs[j];
+                            if (input.tik <= state.lastTik) {
+                                // Already processed. Its effect is already taken into account into the world update
+                                // we just got, so we can drop it.
+                                this.pending_inputs.splice(j, 1);
                             }
-
-                            // inputBufer.forEach((input, i) => {
-                            //     update(input.dt, input.input)
-                            // })
-                        };
+                            else {
+                                // Not processed by the server yet. Re-apply it.
+                                player.move(input.dir, input.delta)
+                                j++;
+                            }
+                        }
+                    }
+                    else {
+                        // Reconciliation is disabled, so drop all the saved inputs.
+                        this.pending_inputs = [];
                     }
                 }
-            });
-        })
+                else {
+                    // Received the position of an entity other than this client's.
+                    if (!this.entity_interpolation) {
+                        // Entity interpolation is disabled - just accept the server's position.
+                        player.pos[0] = state.x
+                        player.pos[1] = state.y
+                    } else {
+                        // Add it to the position buffer.
+                        var timestamp = +new Date();
+                        // entity.position_buffer.push([timestamp, state.position]);
+                    }
+                }
+
+            }
+
+        }
+        // this.network.messages.forEach((message: Array<State>) => {
+        //     message.forEach(state => {
+        //         var player = getPlayerById(this.players, state.uid);
+        //         if (!player) {
+        //             console.log("Player ${state.uid} is not exist");
+        //             return
+        //         }
+        //         player.pos[0] = state.x
+        //         player.pos[1] = state.y
+
+        //         if (state.uid == this.playerId) {
+        //             var serverTik = state.lastTik
+
+        //             var bufferIndex = this.pending_inputs.findIndex(input => {
+        //                 return input.tik == serverTik
+        //             })
+
+        //             if (!(bufferIndex == -1)) {
+
+        //                 var limitVal = 30;
+        //                 var xMin, xMax, yMin, yMax;
+        //                 var [sbX, sbY] = this.stateBufer[bufferIndex].state;
+        //                 xMin = sbX - limitVal
+        //                 xMax = sbX + limitVal
+        //                 yMin = sbY - limitVal
+        //                 yMax = sbY + limitVal
+
+        //                 this.pending_inputs.splice(0, bufferIndex + 1)
+        //                 this.stateBufer.splice(0, bufferIndex + 1)
+
+        //                 if (
+        //                     state.x < xMin ||
+        //                     state.x > xMax ||
+        //                     state.y < yMin ||
+        //                     state.y > yMax
+        //                 ) {
+        //                     var testPlayer = this.getPlayer("asdasd")
+        //                     if (testPlayer) {
+        //                         testPlayer.pos[0] = state.x
+        //                         testPlayer.pos[1] = state.y
+        //                         testPlayer.changeDirection(state.dir)
+        //                     }
+
+        //                     // inputBufer.forEach((input, i) => {
+        //                     //     update(input.dt, input.input)
+        //                     // })
+        //                 };
+        //             }
+        //         }
+        //     });
+        // })
 
         this.network.messages = []
     }
@@ -124,7 +204,7 @@ class Client {
             dir
         }
 
-        const player = this.getPlayer();
+        const player = this.getPlayer("asdasd");
 
         if (!player) {
             console.log("local player is not exist")
@@ -135,7 +215,7 @@ class Client {
 
         this.network.socket.emit('movement', input);
 
-        this.inputBufer.push(input)
+        this.pending_inputs.push(input)
         this.stateBufer.push({ tik: this.tik, state: player.pos });
     }
 
@@ -191,9 +271,9 @@ class Client {
         }
     }
 
-    getPlayer(): Player | undefined {
+    getPlayer(id: string): Player | undefined {
         // return players.find(player => player.id == playerId);
-        return this.players.find(player => player.id == "asdasd");
+        return this.players.find(player => player.id == id);
     }
 
 }

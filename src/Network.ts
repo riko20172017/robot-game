@@ -6,7 +6,7 @@ class Network {
 
     messages: Array<Array<State>>
     socket: Socket<ServerToClientEvents, ClientToServerEvents>
-    
+
     constructor() {
         this.messages = []
         this.socket = io();
@@ -51,6 +51,9 @@ class Network {
         // }
     }
 
+    receive() {
+        return this.messages.shift()
+    }
 }
 
 export default Network
