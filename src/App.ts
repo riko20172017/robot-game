@@ -1,5 +1,4 @@
 import Client from "./Client.js";
-import { Input } from "./Input.js";
 import Resources from "./Resources.js";
 import Entity from "./units/Entity.js";
 import { Player } from "./units/Player.js"

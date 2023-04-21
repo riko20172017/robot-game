@@ -105,11 +105,11 @@ class Server {
                     entity.x += dt;
                     break;
                 default:
-                    break;
+                    break; 
             }
         });
 
-        this.network.messages = []
+        this.network.messages = [] 
 
     }
 
@@ -118,11 +118,11 @@ class Server {
     }
 
     getEntity(uid: string): Entity | undefined {
-        return this.entities.find(entity => entity.uid == uid)
+        return this.entities.find(entity => entity.uid == uid) 
     }
 }
 
-new Server()
+new Server()  
 
 
 // function updateEntities(dt) {
