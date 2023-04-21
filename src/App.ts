@@ -19,7 +19,6 @@ class App {
     resources: Resources;
     terrainPattern: CanvasPattern | null
     client: Client
-    inputs: Input
     now: number = 0
     elapsed: number = 0
     now1: number = 0
@@ -36,9 +35,8 @@ class App {
         this.lastTime = performance.now();
         this.tik = 0
         this.resources = new Resources();
-        this.terrainPattern = this.ctx.createPattern(this.resources.get('img/terrain.png'), 'repeat')
+        this.terrainPattern = null
         this.client = new Client()
-        this.inputs = new Input()
         this.update_interval = 0
         this.isGameOver = false
 
@@ -55,7 +53,9 @@ class App {
     init() {
         this.canvas.width = Settings.width;
         this.canvas.height = Settings.height;
+        this.terrainPattern = this.ctx.createPattern(this.resources.get('img/terrain.png'), 'repeat')
         document.body.appendChild(this.canvas);
+
 
         this.main(30)
     }

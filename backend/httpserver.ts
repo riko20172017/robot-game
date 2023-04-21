@@ -4,9 +4,11 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 
-const __filename = fileURLToPath(import.meta.url);
+// const __filename = fileURLToPath(import.meta.url);
+const __filename = fileURLToPath("file:///D:/dev/canvas-game/canvas-game-bootstrap/dist/backend/httpserver.js");
 let __dirname = path.dirname(__filename);
-__dirname = __dirname.replace("\dist","")
+__dirname = __dirname.split("\\").slice(0,4).join("\\")
+
 
 var app = express();
 app.set('port', 5000);

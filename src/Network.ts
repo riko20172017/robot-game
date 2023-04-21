@@ -6,6 +6,7 @@ class Network {
 
     messages: Array<Array<State>>
     socket: Socket<ServerToClientEvents, ClientToServerEvents>
+    
     constructor() {
         this.messages = []
         this.socket = io();

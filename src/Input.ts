@@ -23,13 +23,13 @@ class Input {
         switch (event.keyCode) {
             case 32:
                 this.keys.SPACE = status; break;
-            case 37:
+            case 65:
                 this.keys.LEFT = status; break;
-            case 38:
+            case 87:
                 this.keys.UP = status; break;
-            case 39:
+            case 68:
                 this.keys.RIGHT = status; break;
-            case 40:
+            case 83:
                 this.keys.DOWN = status; break;
             default:
         }
