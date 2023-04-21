@@ -117,9 +117,6 @@ class Client {
             return
         }
 
-        console.log(11);
-        
-
         let input: IInput = {
             tik: this.tik,
             uid: this.playerId,
