@@ -20,7 +20,7 @@ class Network {
         this.socket.on('OFFER', function (data: Offer) {
             client.playerId = data.uid
             client.players.push(new Player(client.playerId, 0, 0))
-            client.players.push(new PlayerTest("asdasd", 0, 0))
+            // client.players.push(new PlayerTest("asdasd", 0, 0))
         });
 
         this.socket.on('state', function (data: Array<State>) {
