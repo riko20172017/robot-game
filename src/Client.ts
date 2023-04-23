@@ -154,6 +154,7 @@ class Client {
   processInputs(delta: number, keys: Keys) {
 
     let dir = "";
+    let fire = false;
 
     if (keys.DOWN) {
       dir = 'DOWN'
@@ -163,6 +164,8 @@ class Client {
       dir = 'RIGHT'
     } else if (keys.LEFT) {
       dir = 'LEFT'
+    } else if (keys.SPACE) {
+      fire = true
     } else {
       return
     }
@@ -171,7 +174,8 @@ class Client {
       tik: this.tik,
       uid: this.playerId,
       delta,
-      dir
+      dir,
+      fire: fire
     }
 
     // const player = this.getPlayer("asdasd");
@@ -183,6 +187,10 @@ class Client {
     }
 
     player.applyInput(dir, delta)
+
+    if (fire) {
+      this.bullets.push(new Bullet(delta.toString(), player.pos[0], player.pos[1]))
+    }
 
     this.network.socket.emit('movement', input);
 

@@ -99,7 +99,7 @@ class App {
             this.client.players.forEach((player: Player) => this.renderEntity(player))
         }
 
-        // this.renderEntities(this.client.bullets);
+        this.renderEntities(this.client.bullets);
         // this.renderEntities(this.client.enemies);
         // this.renderEntities(this.client.explosions);
 

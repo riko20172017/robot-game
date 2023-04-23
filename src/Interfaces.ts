@@ -14,7 +14,8 @@ interface IInput {
     tik: number
     delta: number
     uid: string
-    dir: string
+    dir: string,
+    fire: boolean
 }
 
 interface IBullet {

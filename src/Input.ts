@@ -20,7 +20,7 @@ class Input {
     }
 
     setKey(event: KeyboardEvent, status: boolean) {
-        switch (event.keyCode) {
+        switch (event.keyCode) {          
             case 32:
                 this.keys.SPACE = status; break;
             case 65:
