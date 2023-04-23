@@ -216,8 +216,6 @@ class Client {
       bullet.pos[0] += bulletSpeed * dt * (bullet.way[0]);
       bullet.pos[1] += bulletSpeed * dt * (bullet.way[1]);
 
-
-
       // Remove the bullet if it goes offscreen
       if (bullet.pos[1] < 0 || bullet.pos[1] > Settings.height ||
         bullet.pos[0] > Settings.width) {
