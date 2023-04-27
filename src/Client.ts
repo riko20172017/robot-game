@@ -35,7 +35,7 @@ class Client {
     this.explosions = []
     this.pending_inputs = []
     this.stateBufer = []
-    this.lastFire = Date.now();
+    this.lastFire = performance.now()
     this.server_reconciliation = true
     this.entity_interpolation = true
     this.tik = 0
@@ -187,6 +187,37 @@ class Client {
     }
 
     player.applyInput(dir, delta)
+
+    // Process fire start ---------------------------------------------------------------------==>
+
+    if (fire && performance.now() - this.lastFire > 100) {
+        var x = player.pos[0] + player.sprite.size[0] / 2;
+        var y = player.pos[1] + player.sprite.size[1] / 2;
+
+        var mx = keys.MOUSE.x;
+        var my = keys.MOUSE.y;
+        var vx = mx - x;
+        var vy = my - y;
+
+        var dist = Math.sqrt(vx * vx + vy * vy);
+        var dx = vx / dist;
+        var dy = vy / dist;
+
+        var angle = Math.atan2(vx, vy);
+
+        this.bullets.push({
+            pos: [x, y],
+            way: [dx, dy],
+            dir: -angle + 1.5,
+            sprite: new Sprite('img/sprites.png', [0, 39], [18, 8], [0, 0], 10, angle)
+        });
+
+        new Bullet(x, y, [dx, dy], -angle + 1.5, angle)
+
+        lastFire = Date.now();
+    }
+
+    // Process fire end -----------------------------------------------------------------------
 
     if (fire) {
       this.bullets.push(new Bullet(delta.toString(), player.pos[0], player.pos[1]))

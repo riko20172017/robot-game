@@ -4,11 +4,10 @@ class Keys {
     UP = false
     RIGHT = false
     DOWN = false
+    MOUSE = { x: 0, y: 0 }
 }
 
 class Input {
-
-    mouse = { x: 0, y: 0 };
 
     keys: Keys = new Keys()
 
@@ -20,7 +19,7 @@ class Input {
     }
 
     setKey(event: KeyboardEvent, status: boolean) {
-        switch (event.keyCode) {          
+        switch (event.keyCode) {
             case 32:
                 this.keys.SPACE = status; break;
             case 65:
@@ -55,13 +54,8 @@ class Input {
 
 
     mousemove(e: MouseEvent) {
-        this.mouse.x = e.offsetX;
-        this.mouse.y = e.offsetY;
-    }
-
-    getMouse() {
-        let self = this
-        return { x: self.mouse.x, y: self.mouse.y };
+        this.keys.MOUSE.x = e.offsetX;
+        this.keys.MOUSE.y = e.offsetY;
     }
 
     getKeys() {
@@ -72,4 +66,4 @@ class Input {
     // }
 }
 
-export {Input, Keys}
+export { Input, Keys }
