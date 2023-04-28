@@ -1,7 +1,8 @@
 // Зависимости
 import { performance } from 'perf_hooks'
 import Network from "./Network.js";
-import { Entity, Client } from './Interfaces.js';
+import { Entity, Client, IExplosion } from './Interfaces.js';
+import { IBullet } from 'src/Interfaces.js';
 
 
 // Game state
@@ -17,7 +18,8 @@ class Server {
     update_rate: number;
     network: Network;
     update_interval: NodeJS.Timer | undefined
-    bullets: Bullet[]
+    bullets: IBullet[]
+    explosions: IExplosion[]
 
     constructor() {
         this.clients = [];
@@ -26,6 +28,7 @@ class Server {
         this.network = new Network()
         this.network.init(this)
         this.bullets = []
+        this.explosions = []
         // Default update rate.
         this.setUpdateRate(10);
     }
@@ -62,7 +65,7 @@ class Server {
             let dt = playerSpeed * delta;
 
             if (bullet) {
-                this.bullets.push({ id: bullet.id, x: bullet.x, y: bullet.y, vx: bullet.vx, vy: bullet.vy, angle: bullet.angle })
+                this.bullets.push({ id: bullet.id, playerId: bullet.playerId, x: bullet.x, y: bullet.y, vx: bullet.vx, vy: bullet.vy, angle: bullet.angle })
             }
 
             entity.lastTik = tik
@@ -118,22 +121,21 @@ class Server {
             for (var j = 0; j < this.bullets.length; j++) {
                 let bullet = this.bullets[j];
                 var bulletSize = [18, 8];
-                
-                // if (bullet.id !== entity.uid) {
-                    if (this.boxCollides([entity.x, entity.y], entitySize, [bullet.x, bullet.y], bulletSize)) {
-                        // Remove the enemy
-                        this.entities.splice(i, 1)
 
-                        this.network.io.emit('explosions', { entity, bulletKey: j });
-                        // Remove the bullet and stop this iteration
-                        this.bullets.splice(j, 1);
-                        break;
-                    }
+                // if (bullet.id !== entity.uid) {
+                if (this.boxCollides([entity.x, entity.y], entitySize, [bullet.x, bullet.y], bulletSize)) {
+                    // Remove the enemy
+                    this.entities.splice(i, 1)
+                    // Add explosion
+                    this.explosions.push({ x: entity.x, y: entity.y, bulletId: bullet.id })
+                    // Remove the bullet and stop this iteration
+                    this.bullets.splice(j, 1);
+                    break;
+                }
                 // }
             }
 
         }
-
 
         // if (boxCollides(pos, size, player.pos, player.sprite.size)) {
         //     gameOver();
@@ -155,7 +157,8 @@ class Server {
     }
 
     sendState() {
-        this.network.io.sockets.emit('state', [...this.entities]);
+        this.network.io.sockets.emit('state', { states: this.entities, bullets: this.bullets, explosions: this.explosions })
+        this.explosions = []
     }
 
     getEntity(uid: string): Entity | undefined {

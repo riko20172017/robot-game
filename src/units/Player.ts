@@ -1,3 +1,4 @@
+import Settings from "../Settings.js";
 import Sprite from "../Sprite.js";
 import Entity from "./Entity.js"
 
@@ -8,7 +9,7 @@ class Player extends Entity {
         this.id = id;
         this.pos = [x, y];
         this.sprite = new Sprite('img/player.png', [0, 0], [39, 39], 16, [0, 1])
-        this.speed = 200
+        this.speed = Settings.playerSpeed
         this.position_buffer = []
 
     }

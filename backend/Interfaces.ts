@@ -1,3 +1,5 @@
+import { IBullet } from "src/Interfaces"
+
 interface Entity {
     uid: string
     x: number
@@ -11,7 +13,7 @@ interface Message {
     delta: number
     uid: string,
     fire: boolean,
-    bullet?: Bullet
+    bullet?: IBullet
 }
 
 interface Client {
@@ -19,4 +21,10 @@ interface Client {
     uid: string
 }
 
-export { Entity, Message, Client }
+interface IExplosion {
+    x: number
+    y: number
+    bulletId: string
+}
+
+export { Entity, Message, Client, IExplosion }

@@ -4,12 +4,10 @@ import Entity from "./units/Entity.js";
 import Settings from "./Settings.js";
 import { Player } from "./units/Player.js";
 import { Input, Keys } from "./Input.js";
+import { IInput } from "./Interfaces.js";
+import Explosion from "./units/Explosion.js";
 
 // player id = asdasd
-
-// Speed in pixels per second
-var bulletSpeed = 500;
-var enemySpeed = 100;
 
 class Client {
 
@@ -26,11 +24,13 @@ class Client {
   input: Input
   server_reconciliation: boolean
   entity_interpolation: boolean
+  bulletIndex: number
 
   constructor() {
     this.playerId = ""
     this.players = []
     this.bullets = []
+    this.bulletIndex = 0
     this.enemies = []
     this.explosions = []
     this.pending_inputs = []
@@ -73,9 +73,29 @@ class Client {
       let message = this.network.receive()
       if (!message) break; /*⛔*/
 
+      let states = message.states
+      let bullets = message.bullets
+      let explosions = message.explosions
+
+      // Add bullets
+      for (let i = 0; i < bullets.length; i++) {
+        const bullet = bullets[i];
+        if (bullet.playerId !== this.playerId) {
+          this.bullets.push(new Bullet(bullet.id, bullet.playerId, bullet.x, bullet.y, [bullet.vx, bullet.vy], bullet.angle))
+        }
+      }
+
+      // Add explosions
+      for (let i = 0; i < explosions.length; i++) {
+        const explosion = explosions[i];
+        this.explosions.push(new Explosion(explosion.x, explosion.y))
+        let bulletIndex = this.bullets.findIndex(bullet => bullet.id == explosion.bulletId)
+        this.bullets.splice(bulletIndex, 0)
+      }
+
       // World state is a list of entity states.
-      for (var i = 0; i < message.length; i++) {/*➿*/
-        var state = message[i];
+      for (var i = 0; i < states.length; i++) {/*➿*/
+        var state = states[i];
 
         // If this is the first time we see this entity, create a local representation.
         if (!this.havePlayer(state.uid)) {
@@ -142,7 +162,7 @@ class Client {
         const player = this.players[i];
         const uid = player.id
 
-        if (message.find(state => state.uid == uid) == undefined) {
+        if (states.find(state => state.uid == uid) == undefined) {
           this.players.splice(i, 1)
         }
       }
@@ -190,7 +210,7 @@ class Client {
 
     // Process fire start ---------------------------------------------------------------------==>
 
-    if (fire && ((performance.now() - this.lastFire) > 100)) {
+    if (fire && ((performance.now() - this.lastFire) > Settings.rocketDelay)) {
 
       var x = player.pos[0] + player.sprite.size[0] / 2;
       var y = player.pos[1] + player.sprite.size[1] / 2;
@@ -203,11 +223,11 @@ class Client {
       var vy = vy / dist;
       var angle = -Math.atan2(vx, vy) + + 1.5;
 
-      this.bullets.push(new Bullet(x, y, [vx, vy], angle,))
+      this.bullets.push(new Bullet(this.playerId + this.bulletIndex, this.playerId, x, y, [vx, vy], angle,))
 
       this.lastFire = performance.now();
 
-      input.bullet = { id: player.id, x, y, vx, vy, angle }
+      input.bullet = { id: this.playerId + this.bulletIndex, playerId: player.id, x, y, vx, vy, angle }
     }
 
     // Process fire end -----------------------------------------------------------------------
@@ -233,25 +253,13 @@ class Client {
       var bullet = this.bullets[i];
 
       // bullet.pos[0] += bulletSpeed * dt * (- 1);
-      bullet.pos[0] += bulletSpeed * dt * (bullet.way[0]);
-      bullet.pos[1] += bulletSpeed * dt * (bullet.way[1]);
+      bullet.pos[0] += Settings.rocketSpeed * dt * (bullet.way[0]);
+      bullet.pos[1] += Settings.rocketSpeed * dt * (bullet.way[1]);
 
       // Remove the bullet if it goes offscreen
       if (bullet.pos[1] < 0 || bullet.pos[1] > Settings.height ||
         bullet.pos[0] > Settings.width) {
         this.bullets.splice(i, 1);
-        i--;
-      }
-    }
-
-    // Update all the enemies
-    for (var i = 0; i < this.enemies.length; i++) {
-      this.enemies[i].pos[0] -= enemySpeed * dt;
-      this.enemies[i].sprite.update(dt);
-
-      // Remove if offscreen
-      if (this.enemies[i].pos[0] + this.enemies[i].sprite.size[0] < 0) {
-        this.enemies.splice(i, 1);
         i--;
       }
     }
@@ -312,22 +320,5 @@ class Client {
   }
 
 }
-
-// function checkPlayerBounds() {
-//     // Check bounds
-//     if (player.pos[0] < 0) {
-//         player.pos[0] = 0;
-//     }
-//     else if (player.pos[0] > canvas.width - player.sprite.size[0]) {
-//         player.pos[0] = canvas.width - player.sprite.size[0];
-//     }
-
-//     if (player.pos[1] < 0) {
-//         player.pos[1] = 0;
-//     }
-//     else if (player.pos[1] > canvas.height - player.sprite.size[1]) {
-//         player.pos[1] = canvas.height - player.sprite.size[1];
-//     }
-// }
 
 export default Client

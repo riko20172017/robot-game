@@ -1,3 +1,5 @@
+import { IExplosion } from "backend/Interfaces"
+
 interface State {
     uid: string
     x: number
@@ -6,17 +8,25 @@ interface State {
     dir: string
 }
 
-interface Message {
-
+interface IMessage {
+    states: State[]
+    bullets: IBullet[]
+    explosions: IExplosion[]
 }
 
-interface IExplosion {
-    playerId: string,
-    entity: State
-}
+// interface IExplosion {
+//     playerId: string,
+//     entity: State
+// }
 
-interface Bullet {
-    id: string, x: number, y: number, vx: number, vy: number, angle: number
+interface IBullet {
+    id: string
+    playerId: string
+    x: number
+    y: number
+    vx: number
+    vy: number,
+    angle: number
 }
 
 interface IInput {
@@ -25,12 +35,10 @@ interface IInput {
     uid: string
     dir: string,
     fire: boolean
-    bullet?: Bullet
+    bullet?: IBullet
 }
 
-interface IBullet {
-    way: Array<number>
-}
+
 
 interface Key {
 
@@ -43,11 +51,20 @@ interface Offer {
 interface ServerToClientEvents {
     noArg: () => void;
     OFFER: (data: Offer) => void;
-    state: (data: Array<State>) => void;
-    explosions: (data: IExplosion) => void;
+    state: (data: IMessage) => void;
 }
 
 interface ClientToServerEvents {
     DISCOVER: () => void
     movement: (data: IInput) => void;
+}
+
+export {
+    State,
+    IMessage,
+    ServerToClientEvents,
+    ClientToServerEvents,
+    Offer,
+    IBullet,
+    IInput,
 }
