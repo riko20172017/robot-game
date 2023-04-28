@@ -194,21 +194,20 @@ class Client {
 
       var x = player.pos[0] + player.sprite.size[0] / 2;
       var y = player.pos[1] + player.sprite.size[1] / 2;
-
       var mx = keys.MOUSE.x;
       var my = keys.MOUSE.y;
       var vx = mx - x;
       var vy = my - y;
-
       var dist = Math.sqrt(vx * vx + vy * vy);
-      var dx = vx / dist;
-      var dy = vy / dist;
+      var vx = vx / dist;
+      var vy = vy / dist;
+      var angle = -Math.atan2(vx, vy) + + 1.5;
 
-      var angle = Math.atan2(vx, vy);
-
-      this.bullets.push(new Bullet(x, y, [dx, dy], -angle + 1.5, angle))
+      this.bullets.push(new Bullet(x, y, [vx, vy], angle,))
 
       this.lastFire = performance.now();
+
+      input.bullet = { id: player.id, x, y, vx, vy, angle }
     }
 
     // Process fire end -----------------------------------------------------------------------

@@ -1,4 +1,5 @@
 import Client from "./Client.js";
+import Explosion from "./units/Explosion.js";
 import { Player, PlayerTest } from "./units/Player.js";
 import { io, Socket } from "socket.io-client";
 
@@ -27,21 +28,17 @@ class Network {
             network.messages.push(data);
         })
 
-        // socket.on('explosions', function (data) {
-        //     delete players[data.player.id]
-        //     bullets.splice(data.bulletKey, 1);
-        //     explosions.push({
-        //         pos: [data.player.x, data.player.y],
-        //         sprite: new Sprite('img/sprites.png',
-        //             [0, 117],
-        //             [39, 39],
-        //             16,
-        //             [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
-        //             null,
-        //             true)
-        //     });
+        this.socket.on('explosions', function (data: IExplosion) {
+            for (let i = 0; i < client.players.length; i++) {
+                const entity = client.players[i];
+                if (entity.id == data.playerId) client.players.splice(i, 1)
+            }
 
-        // })
+            // bullets.splice(data.bulletKey, 1);
+
+            client.explosions.push(new Explosion(data.entity.x, data.entity.y))
+
+        })
 
         // if (data?.bullet) {
         //     bullets.push({

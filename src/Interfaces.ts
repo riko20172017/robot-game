@@ -10,12 +10,22 @@ interface Message {
 
 }
 
+interface IExplosion {
+    playerId: string,
+    entity: State
+}
+
+interface Bullet {
+    id: string, x: number, y: number, vx: number, vy: number, angle: number
+}
+
 interface IInput {
     tik: number
     delta: number
     uid: string
     dir: string,
     fire: boolean
+    bullet?: Bullet
 }
 
 interface IBullet {
@@ -34,6 +44,7 @@ interface ServerToClientEvents {
     noArg: () => void;
     OFFER: (data: Offer) => void;
     state: (data: Array<State>) => void;
+    explosions: (data: IExplosion) => void;
 }
 
 interface ClientToServerEvents {

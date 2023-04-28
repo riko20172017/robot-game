@@ -9,7 +9,9 @@ interface Message {
     dir: string
     tik: number
     delta: number
-    uid: string
+    uid: string,
+    fire: boolean,
+    bullet?: Bullet
 }
 
 interface Client {

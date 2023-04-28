@@ -101,7 +101,7 @@ class App {
 
         this.renderEntities(this.client.bullets);
         // this.renderEntities(this.client.enemies);
-        // this.renderEntities(this.client.explosions);
+        this.renderEntities(this.client.explosions);
 
         this.renderGUI()
     }
