@@ -24,6 +24,7 @@ class Client {
   input: Input
   server_reconciliation: boolean
   entity_interpolation: boolean
+  client_side_prediction: boolean
   bulletIndex: number
 
   constructor() {
@@ -36,8 +37,9 @@ class Client {
     this.pending_inputs = []
     this.stateBufer = []
     this.lastFire = performance.now()
-    this.server_reconciliation = true
+    this.server_reconciliation = false
     this.entity_interpolation = true
+    this.client_side_prediction = true
     this.tik = 0
     this.network = new Network()
     this.input = new Input()
@@ -189,7 +191,10 @@ class Client {
         return
       }
 
-      player.applyInput(keys, delta)
+      if (this.client_side_prediction) {
+        player.applyInput(keys, delta)
+      }
+
 
       // Process fire start ---------------------------------------------------------------------==>
 
