@@ -1,3 +1,4 @@
+import { Keys } from "src/Input"
 import { IBullet } from "src/Interfaces"
 
 interface Entity {
@@ -8,11 +9,10 @@ interface Entity {
 }
 
 interface Message {
-    dir: string
+    keys: Keys
     tik: number
     delta: number
     uid: string,
-    fire: boolean,
     bullet?: IBullet
 }
 

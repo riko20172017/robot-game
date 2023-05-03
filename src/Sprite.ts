@@ -68,19 +68,19 @@ export default class Sprite {
                 x += frame * this.size[0];
                 y = this.size[1] * 1
                 break;
-            case 'UP-RIGHT':
+            case 'UPRIGHT':
                 x += frame * this.size[0];
                 y = this.size[1] * 5
                 break;
-            case 'UP-LEFT':
+            case 'UPLEFT':
                 x += frame * this.size[0];
                 y = this.size[1] * 6
                 break;
-            case 'DOWN-LEFT':
+            case 'DOWNLEFT':
                 x += frame * this.size[0];
                 y = this.size[1] * 7
                 break;
-            case 'DOWN-RIGHT':
+            case 'DOWNRIGHT':
                 x += frame * this.size[0];
                 y = this.size[1] * 4
                 break;

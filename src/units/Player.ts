@@ -1,3 +1,4 @@
+import { Keys } from "src/Input.js";
 import Settings from "../Settings.js";
 import Sprite from "../Sprite.js";
 import Entity from "./Entity.js"
@@ -14,39 +15,27 @@ class Player extends Entity {
 
     }
 
-    applyInput(dir: string, delta: number) {
+    applyInput(keys: Keys, delta: number) {
         delta = delta * this.speed;
-        switch (dir) {
-            case 'DOWN':
-                this.pos[1] += delta;
-                break;
-            case 'UP':
-                this.pos[1] -= delta;
-                break;
-            case 'LEFT':
-                this.pos[0] -= delta;
-                break;
-            case 'RIGHT':
-                this.pos[0] += delta;
-                break;
-            case 'UP-RIGHT':
-                this.pos[1] -= delta;
-                this.pos[0] += delta;
-                break;
-            case 'UP-LEFT':
-                this.pos[1] -= delta;
-                this.pos[0] -= delta;
-                break;
-            case 'DOWN-LEFT':
-                this.pos[1] += delta;
-                this.pos[0] -= delta;
-                break;
-            case 'DOWN-RIGHT':
-                this.pos[1] += delta;
-                this.pos[0] += delta;
-                break;
-        }
+        var dir = ""
 
+        if (keys.DOWN) {
+            this.pos[1] += delta;
+            dir = dir.concat("DOWN")
+        }
+        if (keys.UP) {
+            this.pos[1] -= delta;
+            dir = dir.concat("UP")
+        }
+        if (keys.RIGHT) {
+            this.pos[0] += delta;
+            dir = dir.concat("RIGHT")
+        }
+        if (keys.LEFT) {
+            this.pos[0] -= delta;
+            dir = dir.concat("LEFT")
+        }
+        
         this.changeDirection(dir);
     }
 

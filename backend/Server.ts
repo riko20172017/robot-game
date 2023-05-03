@@ -53,7 +53,7 @@ class Server {
     handleInput() {
         // [ dir, playerId, tik, dt ]
         this.network.messages.forEach(message => {
-            let { dir, uid, tik, delta, fire, bullet } = message;
+            let { keys, uid, tik, delta, bullet } = message;
 
             var entity = this.getEntity(uid)
 
@@ -70,21 +70,17 @@ class Server {
 
             entity.lastTik = tik
 
-            switch (dir) {
-                case 'DOWN':
-                    entity.y += dt;
-                    break;
-                case 'UP':
-                    entity.y -= dt;
-                    break;
-                case 'LEFT':
-                    entity.x -= dt;
-                    break;
-                case 'RIGHT':
-                    entity.x += dt;
-                    break;
-                default:
-                    break;
+            if (keys.DOWN) {
+                entity.y += dt;
+            }
+            if (keys.UP) {
+                entity.y -= dt;
+            }
+            if (keys.LEFT) {
+                entity.x -= dt;
+            }
+            if (keys.RIGHT) {
+                entity.x += dt;
             }
         });
 

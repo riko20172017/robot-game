@@ -132,7 +132,7 @@ class Client {
               }
               else {
                 // Not processed by the server yet. Re-apply it.
-                player.applyInput(input.dir, input.delta)
+                player.applyInput(input.keys, input.delta)
                 j++;
               }
             }
@@ -173,69 +173,53 @@ class Client {
 
   processInputs(delta: number, keys: Keys) {
 
-    let dir = "";
-    let fire = false;
+    if (keys.DOWN || keys.UP || keys.RIGHT || keys.LEFT || keys.SPACE) {
+      let input: IInput = {
+        tik: this.tik,
+        uid: this.playerId,
+        delta,
+        keys,
+      }
 
-    if (keys.DOWN) {
-      dir = 'DOWN'
-    } else if (keys.UP) {
-      dir = 'UP'
-    } else if (keys.RIGHT) {
-      dir = 'RIGHT'
-    } else if (keys.LEFT) {
-      dir = 'LEFT'
-    } else if (keys.SPACE) {
-      fire = true
-    } else {
-      return
+      // const player = this.getPlayer("asdasd");
+      const player = this.getPlayer(this.playerId);
+
+      if (!player) {
+        console.log("local player is not exist")
+        return
+      }
+
+      player.applyInput(keys, delta)
+
+      // Process fire start ---------------------------------------------------------------------==>
+
+      if (keys.SPACE && ((performance.now() - this.lastFire) > Settings.rocketDelay)) {
+
+        var x = player.pos[0] + player.sprite.size[0] / 2;
+        var y = player.pos[1] + player.sprite.size[1] / 2;
+        var mx = keys.MOUSE.x;
+        var my = keys.MOUSE.y;
+        var vx = mx - x;
+        var vy = my - y;
+        var dist = Math.sqrt(vx * vx + vy * vy);
+        var vx = vx / dist;
+        var vy = vy / dist;
+        var angle = -Math.atan2(vx, vy) + + 1.5;
+
+        this.bullets.push(new Bullet(this.playerId + this.bulletIndex, this.playerId, x, y, [vx, vy], angle,))
+
+        this.lastFire = performance.now();
+
+        input.bullet = { id: this.playerId + this.bulletIndex, playerId: player.id, x, y, vx, vy, angle }
+      }
+
+      // Process fire end -----------------------------------------------------------------------
+
+      this.network.socket.emit('movement', input);
+
+      this.pending_inputs.push(input)
+      this.stateBufer.push({ tik: this.tik, state: player.pos });
     }
-
-    let input: IInput = {
-      tik: this.tik,
-      uid: this.playerId,
-      delta,
-      dir,
-      fire: fire
-    }
-
-    // const player = this.getPlayer("asdasd");
-    const player = this.getPlayer(this.playerId);
-
-    if (!player) {
-      console.log("local player is not exist")
-      return
-    }
-
-    player.applyInput(dir, delta)
-
-    // Process fire start ---------------------------------------------------------------------==>
-
-    if (fire && ((performance.now() - this.lastFire) > Settings.rocketDelay)) {
-
-      var x = player.pos[0] + player.sprite.size[0] / 2;
-      var y = player.pos[1] + player.sprite.size[1] / 2;
-      var mx = keys.MOUSE.x;
-      var my = keys.MOUSE.y;
-      var vx = mx - x;
-      var vy = my - y;
-      var dist = Math.sqrt(vx * vx + vy * vy);
-      var vx = vx / dist;
-      var vy = vy / dist;
-      var angle = -Math.atan2(vx, vy) + + 1.5;
-
-      this.bullets.push(new Bullet(this.playerId + this.bulletIndex, this.playerId, x, y, [vx, vy], angle,))
-
-      this.lastFire = performance.now();
-
-      input.bullet = { id: this.playerId + this.bulletIndex, playerId: player.id, x, y, vx, vy, angle }
-    }
-
-    // Process fire end -----------------------------------------------------------------------
-
-    this.network.socket.emit('movement', input);
-
-    this.pending_inputs.push(input)
-    this.stateBufer.push({ tik: this.tik, state: player.pos });
   }
 
   updateEntities(dt: number) {

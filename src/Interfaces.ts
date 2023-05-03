@@ -1,4 +1,5 @@
 import { IExplosion } from "backend/Interfaces"
+import { Keys } from "./Input"
 
 interface State {
     uid: string
@@ -33,8 +34,7 @@ interface IInput {
     tik: number
     delta: number
     uid: string
-    dir: string,
-    fire: boolean
+    keys: Keys,
     bullet?: IBullet
 }
 

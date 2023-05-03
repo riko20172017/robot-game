@@ -35,12 +35,10 @@ class Input {
     }
 
     keydown(e: KeyboardEvent) {
-        let self = this
         this.setKey(e, true);
     }
 
     keyup(e: KeyboardEvent) {
-        let self = this
         this.setKey(e, false);
     }
 
