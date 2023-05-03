@@ -55,7 +55,7 @@ class Client {
       return;  // Not connected yet.
     }
 
-    this.processInputs(dt, this.input.getKeys());
+    this.processInputs(dt);
 
     // Interpolate other entities.
     if (this.entity_interpolation) {
@@ -152,7 +152,7 @@ class Client {
             player.pos[1] = state.y
           } else {
             // Add it to the position buffer.
-            var timestamp = +new Date();
+            var timestamp = +performance.now();
             player.position_buffer.push([timestamp, state.x, state.y]);
           }
         }
@@ -173,7 +173,9 @@ class Client {
     this.network.messages = []
   }
 
-  processInputs(delta: number, keys: Keys) {
+  processInputs(delta: number) {
+
+    let keys = this.input.getKeys()
 
     if (keys.DOWN || keys.UP || keys.RIGHT || keys.LEFT || keys.SPACE) {
       let input: IInput = {
@@ -268,8 +270,8 @@ class Client {
   interpolateEntities() {
 
     // Compute render timestamp.
-    var now = +new Date();
-    var render_timestamp = now - (1000.0 / 30);
+    var now = +performance.now();
+    var render_timestamp = now - (1000.0 / 10);
 
     for (var i in this.players) {
       var player = this.players[i];
