@@ -1,17 +1,15 @@
-import { Keys } from "src/Input.js";
-import Sprite from "../Sprite.js"
+import Sprite from "src/Sprite";
 
-class Entity {
+abstract class Entity {
     id: string;
     pos: Array<number>;
-    sprite: Sprite
     speed: number
     dir: number
+    abstract sprite: Sprite
 
     constructor(id: string, x: number, y: number) {
         this.id = id;
         this.pos = [x, y];
-        this.sprite = new Sprite('img/player.png', [0, 0], [39, 39], 16, [0, 1])
         this.speed = 200
         this.dir = 0
     }

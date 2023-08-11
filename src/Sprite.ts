@@ -89,28 +89,13 @@ export default class Sprite {
                 break;
         }
 
-        // if (this.dir == 'vertical') {
-        //     y += frame * this.size[1];
-        // }
-        // else {
-        //     x += frame * this.size[0];
-        // }
-
-        //  if (typeof this.dir == 'number') {
-        // ctx.save()
-        // ctx.rotate(this.dir)
-
-        //  }
+        // ctx.translate(-this.size[0]/2, -this.size[1]/2)
 
         ctx.drawImage(window.resources.get(this.url),
             x, y,
             this.size[0], this.size[1],
             0, 0,
             this.size[0], this.size[1]);
-        // if (typeof dir == 'number') {
-        //     this.dir = 0;
-
-        // }
     }
 
 }

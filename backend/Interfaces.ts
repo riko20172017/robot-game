@@ -1,5 +1,5 @@
 import { Keys } from "src/Input"
-import { IBullet } from "src/Interfaces"
+import { Bullet } from "src/Interfaces"
 
 interface Entity {
     uid: string
@@ -13,7 +13,7 @@ interface Message {
     tik: number
     delta: number
     uid: string,
-    bullet?: IBullet
+    bullet?: Bullet
 }
 
 interface Client {

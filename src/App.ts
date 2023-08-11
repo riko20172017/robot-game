@@ -56,7 +56,7 @@ class App {
         document.body.appendChild(this.canvas);
 
 
-        this.main(30)
+        this.main(60)
     }
 
     main(hz: number) {
@@ -83,7 +83,7 @@ class App {
             this.tik++;
         }
 
-        this.update_interval = requestAnimationFrame(function () { self.main(30) });
+        this.update_interval = requestAnimationFrame(function () { self.main(60) });
 
 
         // cancelAnimationFrame(this.update_interval);

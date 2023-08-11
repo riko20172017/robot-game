@@ -11,7 +11,7 @@ interface State {
 
 interface IMessage {
     states: State[]
-    bullets: IBullet[]
+    bullets: Bullet[]
     explosions: IExplosion[]
 }
 
@@ -20,7 +20,7 @@ interface IMessage {
 //     entity: State
 // }
 
-interface IBullet {
+type Bullet = {
     id: string
     playerId: string
     x: number
@@ -35,7 +35,7 @@ interface IInput {
     delta: number
     uid: string
     keys: Keys,
-    bullet?: IBullet
+    bullet?: Bullet
 }
 
 
@@ -65,6 +65,6 @@ export {
     ServerToClientEvents,
     ClientToServerEvents,
     Offer,
-    IBullet,
+    Bullet,
     IInput,
 }

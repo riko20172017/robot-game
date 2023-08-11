@@ -2,6 +2,8 @@ import Sprite from "../Sprite.js";
 import Entity from "./Entity.js"
 
 class Explosion extends Entity {
+    sprite: Sprite
+    
     constructor(x: number, y: number) {
         super("", x, y)
         this.sprite = new Sprite

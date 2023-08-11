@@ -2,15 +2,12 @@
 import { performance } from 'perf_hooks'
 import Network from "./Network.js";
 import { Entity, Client, IExplosion } from './Interfaces.js';
-import { IBullet } from 'src/Interfaces.js';
-
+import { Bullet } from 'src/Interfaces.js';
+import Settings from '../src/Settings.js'
 
 // Game state
 
-var bullets = []
 var playerSpeed = 200;
-var bulletSpeed = 500;
-var lastFire = performance.now();
 
 class Server {
     clients: Array<Client>
@@ -18,24 +15,24 @@ class Server {
     update_rate: number;
     network: Network;
     update_interval: NodeJS.Timer | undefined
-    bullets: IBullet[]
+    bullets: Bullet[]
     explosions: IExplosion[]
+    lastime: number
 
     constructor() {
         this.clients = [];
         this.entities = [];
-        this.update_rate = 0
+        this.update_rate = 30
         this.network = new Network()
         this.network.init(this)
         this.bullets = []
         this.explosions = []
+        this.lastime = 0
         // Default update rate.
-        this.setUpdateRate(10);
+        this.setUpdateRate();
     }
 
-    setUpdateRate(hz: number) {
-        this.update_rate = hz;
-
+    setUpdateRate() {
         clearInterval(this.update_interval);
         this.update_interval = setInterval(
             (function (self) { return function () { self.update(); }; })(this),
@@ -47,6 +44,14 @@ class Server {
         this.updateEntities()
         this.checkCollisions();
         this.sendState();
+
+        // var now = performance.now();
+
+        // var currentFps = Math.round(1000 / (now - this.lastime));
+
+        // this.lastime = performance.now();
+        // console.log(currentFps);
+
     }
 
 
@@ -94,12 +99,12 @@ class Server {
             var bullet = this.bullets[i];
 
             // bullet.pos[0] += bulletSpeed * dt * (- 1);
-            bullet.x += bulletSpeed * 0.1 * (bullet.vx);
-            bullet.y += bulletSpeed * 0.1 * (bullet.vy);
+            bullet.x += Settings.rocketSpeed * 0.045 * (bullet.vx);
+            bullet.y += Settings.rocketSpeed * 0.045 * (bullet.vy);
 
             // Remove the bullet if it goes offscreen
-            if (bullet.x < 0 || bullet.x > 480 ||
-                bullet.y < 0 || bullet.y > 580) {
+            if (bullet.x < 0 || bullet.x > 512 ||
+                bullet.y < 0 || bullet.y > 480) {
                 this.bullets.splice(i, 1);
                 i--;
             }
@@ -118,17 +123,17 @@ class Server {
                 let bullet = this.bullets[j];
                 var bulletSize = [18, 8];
 
-                // if (bullet.id !== entity.uid) {
-                if (this.boxCollides([entity.x, entity.y], entitySize, [bullet.x, bullet.y], bulletSize)) {
-                    // Remove the enemy
-                    this.entities.splice(i, 1)
-                    // Add explosion
-                    this.explosions.push({ x: entity.x, y: entity.y, bulletId: bullet.id })
-                    // Remove the bullet and stop this iteration
-                    this.bullets.splice(j, 1);
-                    break;
+                if (bullet.playerId !== entity.uid) {
+                    if (this.boxCollides([entity.x, entity.y], entitySize, [bullet.x, bullet.y], bulletSize)) {
+                        // Remove the enemy
+                        this.entities.splice(i, 1)
+                        // Add explosion
+                        this.explosions.push({ x: entity.x, y: entity.y, bulletId: bullet.id })
+                        // Remove the bullet and stop this iteration
+                        this.bullets.splice(j, 1);
+                        break;
+                    }
                 }
-                // }
             }
 
         }

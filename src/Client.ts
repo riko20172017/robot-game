@@ -92,7 +92,8 @@ class Client {
         const explosion = explosions[i];
         this.explosions.push(new Explosion(explosion.x, explosion.y))
         let bulletIndex = this.bullets.findIndex(bullet => bullet.id == explosion.bulletId)
-        this.bullets.splice(bulletIndex, 0)
+        console.log(bulletIndex);
+        this.bullets.splice(bulletIndex, 1)
       }
 
       // World state is a list of entity states.
@@ -202,8 +203,8 @@ class Client {
 
       if (keys.SPACE && ((performance.now() - this.lastFire) > Settings.rocketDelay)) {
 
-        var x = player.pos[0] + player.sprite.size[0] / 2;
-        var y = player.pos[1] + player.sprite.size[1] / 2;
+        var x = player.pos[0];
+        var y = player.pos[1];
         var mx = keys.MOUSE.x;
         var my = keys.MOUSE.y;
         var vx = mx - x;
@@ -211,13 +212,17 @@ class Client {
         var dist = Math.sqrt(vx * vx + vy * vy);
         var vx = vx / dist;
         var vy = vy / dist;
-        var angle = -Math.atan2(vx, vy) + + 1.5;
+        var angle = -Math.atan2(vx, vy) + 1.5;
 
-        this.bullets.push(new Bullet(this.playerId + this.bulletIndex, this.playerId, x, y, [vx, vy], angle,))
+        this.bulletIndex++
+
+        var bullet = new Bullet("id" + this.bulletIndex, this.playerId, x, y, [vx, vy], angle)
+
+        this.bullets.push(bullet)
 
         this.lastFire = performance.now();
 
-        input.bullet = { id: this.playerId + this.bulletIndex, playerId: player.id, x, y, vx, vy, angle }
+        input.bullet = { id: "id" + this.bulletIndex, playerId: player.id, x, y, vx, vy, angle }
       }
 
       // Process fire end -----------------------------------------------------------------------

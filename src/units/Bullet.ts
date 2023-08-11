@@ -4,6 +4,7 @@ import Entity from "./Entity.js"
 class Bullet extends Entity {
     way: number[]
     playerId: string
+    sprite: Sprite
 
     constructor(id: string, playerId: string, x: number, y: number, way: number[], dir: number) {
         super(id, x, y)
