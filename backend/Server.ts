@@ -12,36 +12,59 @@ var playerSpeed = 200;
 class Server {
     clients: Array<Client>
     entities: Array<Entity>
-    update_rate: number;
+    updateRate: number;
     network: Network;
     update_interval: NodeJS.Timer | undefined
     bullets: Bullet[]
     explosions: IExplosion[]
     lastime: number
+    previousTick: number
+    actualTicks: number
 
     constructor() {
         this.clients = [];
         this.entities = [];
-        this.update_rate = 30
+        this.updateRate = 1000 / 30
         this.network = new Network()
         this.network.init(this)
         this.bullets = []
         this.explosions = []
         this.lastime = 0
+        this.previousTick = Date.now()
+        this.actualTicks = 0
         // Default update rate.
         this.setUpdateRate();
     }
 
     setUpdateRate() {
-        clearInterval(this.update_interval);
-        this.update_interval = setInterval(
-            (function (self) { return function () { self.update(); }; })(this),
-            1000 / this.update_rate);
+        var now = Date.now()
+        this.actualTicks++
+        if (this.previousTick + this.updateRate <= now) {
+            var delta = (now - this.previousTick) / 1000
+            this.previousTick = now
+
+            this.update(delta)
+
+            // console.log('delta', delta, '(target: ' + this.updateRate +' ms)', 'node ticks', this.actualTicks)
+            this.actualTicks = 0
+        }
+
+        if (Date.now() - this.previousTick < this.updateRate - 16) {
+            setTimeout((function (self) { return function () { self.setUpdateRate() } })(this))
+        } else {
+            setImmediate((function (self) { return function () { self.setUpdateRate() } })(this))
+        }
+
+
+        // clearInterval(this.update_interval);
+        // this.update_interval = setInterval(
+        //     (function (self) { return function () { self.update(); }; })(this),
+        //     1000 / this.update_rate);
     }
 
-    update() {
+    update(delta: number) {
         this.handleInput()
-        this.updateEntities()
+        this.updateEntities(delta)
         this.checkCollisions();
         this.sendState();
 
@@ -93,14 +116,16 @@ class Server {
 
     }
 
-    updateEntities() {
+    updateEntities(delta: number) {
         // Update all the bullets
         for (var i = 0; i < this.bullets.length; i++) {
             var bullet = this.bullets[i];
 
             // bullet.pos[0] += bulletSpeed * dt * (- 1);
-            bullet.x += Settings.rocketSpeed * 0.045 * (bullet.vx);
-            bullet.y += Settings.rocketSpeed * 0.045 * (bullet.vy);
+            // bullet.x += Settings.rocketSpeed * 0.035 * (bullet.vx);
+            // bullet.y += Settings.rocketSpeed * 0.035 * (bullet.vy);
+            bullet.x += Settings.rocketSpeed * delta * (bullet.vx);
+            bullet.y += Settings.rocketSpeed * delta * (bullet.vy);
 
             // Remove the bullet if it goes offscreen
             if (bullet.x < 0 || bullet.x > 512 ||
