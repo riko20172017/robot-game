@@ -6,6 +6,7 @@ import { Player } from "./units/Player.js";
 import { Input, Keys } from "./Input.js";
 import { IInput } from "./Interfaces.js";
 import Explosion from "./units/Explosion.js";
+import Sprite from "./Sprite.js";
 
 // player id = asdasd
 
@@ -83,7 +84,16 @@ class Client {
       for (let i = 0; i < bullets.length; i++) {
         const bullet = bullets[i];
         if (bullet.playerId !== this.playerId) {
-          this.shells.push(new Shell("Rocket", bullet.id, bullet.playerId, bullet.x, bullet.y, [bullet.vx, bullet.vy], bullet.angle))
+          this.shells.push(new Shell(
+            "Rocket",
+            bullet.id,
+            bullet.playerId,
+            bullet.x,
+            bullet.y,
+            bullet.vx,
+            bullet.vy,
+            bullet.angle,
+            new Sprite('img/sprites.png', [0, 39], [18, 6], 10, [0, 0])))
         }
       }
 
@@ -114,8 +124,8 @@ class Client {
 
         // Received the authoritative position of this client's entity.
         if (state.uid == this.playerId) {
-          player.pos[0] = state.x
-          player.pos[1] = state.y
+          player.x = state.x
+          player.y = state.y
 
           // var testPlayer = this.getPlayer("asdasd")
           // if (testPlayer) {
@@ -149,8 +159,8 @@ class Client {
           // Received the position of an entity other than this client's.
           if (!this.entity_interpolation) {
             // Entity interpolation is disabled - just accept the server's position.
-            player.pos[0] = state.x
-            player.pos[1] = state.y
+            player.x = state.x
+            player.y = state.y
           } else {
             // Add it to the position buffer.
             var timestamp = +performance.now();
@@ -203,29 +213,58 @@ class Client {
 
       if (keys.SPACE && ((performance.now() - this.lastFire) > Settings.rocketDelay)) {
 
-        var x = player.pos[0];
-        var y = player.pos[1];
-        var mx = keys.MOUSE.x;
-        var my = keys.MOUSE.y;
-        var vx = mx - x;
-        var vy = my - y;
-        var dist = Math.sqrt(vx * vx + vy * vy);
-        var vx = vx / dist;
-        var vy = vy / dist;
-        var angle = Math.atan2(my - y, mx - x);
+        //   switch (shellType) {
+        //     case "Rocket":
+        //         this.sprite = new Sprite('img/sprites.png', [0, 39], [18, 6], 10, [0, 0])
+        //         break;
+        //     case "Laser":
+        //         this.sprite = new Sprite('img/sprites.png', [0, 39], [18, 6], 10, [0, 0])
+        //         break;
+        //     default:
+        //         this.sprite = new Sprite('img/sprites.png', [0, 39], [18, 6], 10, [0, 0])
+        //         break;
+        // }
 
-        var a = angle * 180 / Math.PI
-
+        var px = player.x;
+        var py = player.y;
+        var tx = keys.MOUSE.x;
+        var ty = keys.MOUSE.y;
+        var diffx = tx - px;
+        var diffy = ty - py;
+        let distance = Math.sqrt(diffx * diffx + diffy * diffy);
+        let moves = distance / 0.9
+        let dx = diffx / moves;
+        let dy = diffy / moves;
+        let radian = Math.atan2(diffy, diffx);
 
         this.shellIndex++
 
-        var shell = new Shell("Rocket", "id" + this.shellIndex, this.playerId, x, y, [vx, vy], angle)
+        let shell = new Shell
+          (
+            "Rocket",
+            this.shellIndex.toString(),
+            this.playerId,
+            px, py,
+            dx, dy,
+            radian,
+            new Sprite('img/sprites.png', [0, 39], [18, 6], 10, [0, 0])
+          )
 
         this.shells.push(shell)
 
         this.lastFire = performance.now();
 
-        input.shell = { id: "id" + this.shellIndex, playerId: player.id, x, y, vx, vy, angle, shellType: shell.shellType }
+        input.shell =
+        {
+          id: shell.id,
+          playerId: shell.playerId,
+          x: shell.x,
+          y: shell.y,
+          vx: shell.dx,
+          vy: shell.dy,
+          angle: radian,
+          shellType: shell.shellType
+        }
       }
 
       // Process fire end -----------------------------------------------------------------------
@@ -233,7 +272,7 @@ class Client {
       this.network.socket.emit('movement', input);
 
       this.pending_inputs.push(input)
-      this.stateBufer.push({ tik: this.tik, state: player.pos });
+      this.stateBufer.push({ tik: this.tik, state: [player.x, player.y] });
     }
   }
 
@@ -252,12 +291,12 @@ class Client {
       var bullet = this.shells[i];
 
       // bullet.pos[0] += bulletSpeed * dt * (- 1);
-      bullet.pos[0] += Settings.rocketSpeed * dt * (bullet.way[0]);
-      bullet.pos[1] += Settings.rocketSpeed * dt * (bullet.way[1]);
+      bullet.x += Settings.rocketSpeed * dt * (bullet.dx);
+      bullet.y += Settings.rocketSpeed * dt * (bullet.dy);
 
       // Remove the bullet if it goes offscreen
-      if (bullet.pos[1] < 0 || bullet.pos[1] > Settings.height ||
-        bullet.pos[0] > Settings.width) {
+      if (bullet.x < 0 || bullet.y > Settings.height ||
+        bullet.y > Settings.width) {
         this.shells.splice(i, 1);
         i--;
       }
@@ -307,8 +346,8 @@ class Client {
         var t0 = buffer[0][0];
         var t1 = buffer[1][0];
 
-        player.pos[0] = x0 + (x1 - x0) * (render_timestamp - t0) / (t1 - t0);
-        player.pos[1] = y0 + (y1 - y0) * (render_timestamp - t0) / (t1 - t0);
+        player.x = x0 + (x1 - x0) * (render_timestamp - t0) / (t1 - t0);
+        player.y = y0 + (y1 - y0) * (render_timestamp - t0) / (t1 - t0);
       }
     }
   }

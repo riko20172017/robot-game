@@ -2,27 +2,29 @@ import Sprite from "src/Sprite";
 
 abstract class Entity {
     id: string;
-    pos: Array<number>;
+    x: number
+    y: number
     speed: number
-    dir: number
+    radian: number
     abstract sprite: Sprite
 
     constructor(id: string, x: number, y: number) {
         this.id = id;
-        this.pos = [x, y];
+        this.x = x;
+        this.y = y;
         this.speed = 200
-        this.dir = 0
+        this.radian = 0
     }
 
     changeDirection(dir: string) { }
-    
-    render (ctx: CanvasRenderingContext2D) {
+
+    render(ctx: CanvasRenderingContext2D) {
         ctx.save();
-        ctx.translate(this.pos[0], this.pos[1]);
-        ctx.rotate(this.dir)
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.radian)
         this.sprite.render(ctx)
         ctx.restore();
-     }
+    }
 }
 
 export default Entity

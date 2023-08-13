@@ -2,29 +2,31 @@ import Sprite from "../Sprite.js";
 import Entity from "./Entity.js"
 
 class Shell extends Entity {
-    way: number[]
     playerId: string
     sprite: Sprite
     shellType: string
+    dx: number
+    dy: number
+    radian: number
 
-    constructor(shellType: string, id: string, playerId: string, x: number, y: number, way: number[], dir: number) {
+    constructor(
+        shellType: string,
+        id: string,
+        playerId: string,
+        x: number,
+        y: number,
+        dx: number,
+        dy: number,
+        radian: number,
+        sprite: Sprite
+    ) {
         super(id, x, y)
         this.shellType = shellType
         this.playerId = playerId
-        this.way = way
-        this.dir = dir
-
-        switch (shellType) {
-            case "Rocket":
-                this.sprite = new Sprite('img/sprites.png', [0, 39], [18, 6], 10, [0, 0])
-                break;
-            case "Laser":
-                this.sprite = new Sprite('img/sprites.png', [0, 39], [18, 6], 10, [0, 0])
-                break;
-            default:
-                this.sprite = new Sprite('img/sprites.png', [0, 39], [18, 6], 10, [0, 0])
-                break;
-        }
+        this.dx = dx
+        this.dy = dy
+        this.radian = radian
+        this.sprite = sprite
     }
 
 

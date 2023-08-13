@@ -10,7 +10,6 @@ class Player extends Entity {
     constructor(id: string, x: number, y: number) {
         super(id, x, y)
         this.id = id;
-        this.pos = [x, y];
         this.sprite = new Sprite('img/player.png', [0, 0], [40, 40], 16, [0, 1])
         this.speed = Settings.playerSpeed
         this.position_buffer = []
@@ -22,19 +21,19 @@ class Player extends Entity {
         var dir = ""
 
         if (keys.DOWN) {
-            this.pos[1] += delta;
+            this.y += delta;
             dir = dir.concat("DOWN")
         }
         if (keys.UP) {
-            this.pos[1] -= delta;
+            this.y -= delta;
             dir = dir.concat("UP")
         }
         if (keys.RIGHT) {
-            this.pos[0] += delta;
+            this.x += delta;
             dir = dir.concat("RIGHT")
         }
         if (keys.LEFT) {
-            this.pos[0] -= delta;
+            this.x -= delta;
             dir = dir.concat("LEFT")
         }
         
