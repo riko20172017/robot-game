@@ -1,7 +1,7 @@
 import Network from "./Network.js"
-import Bullet from "./units/Bullet.js";
+import Shell from "./units/Shell.js";
 import Entity from "./units/Entity.js";
-import Settings from "./Settings.js";
+import Settings from "./Config.js";
 import { Player } from "./units/Player.js";
 import { Input, Keys } from "./Input.js";
 import { IInput } from "./Interfaces.js";
@@ -13,7 +13,7 @@ class Client {
 
   playerId: string
   players: Array<Player>
-  bullets: Array<Bullet>
+  shells: Array<Shell>
   enemies: Array<Entity>
   explosions: Array<Entity>
   pending_inputs: IInput[]
@@ -25,13 +25,13 @@ class Client {
   server_reconciliation: boolean
   entity_interpolation: boolean
   client_side_prediction: boolean
-  bulletIndex: number
+  shellIndex: number
 
   constructor() {
     this.playerId = ""
     this.players = []
-    this.bullets = []
-    this.bulletIndex = 0
+    this.shells = []
+    this.shellIndex = 0
     this.enemies = []
     this.explosions = []
     this.pending_inputs = []
@@ -83,7 +83,7 @@ class Client {
       for (let i = 0; i < bullets.length; i++) {
         const bullet = bullets[i];
         if (bullet.playerId !== this.playerId) {
-          this.bullets.push(new Bullet(bullet.id, bullet.playerId, bullet.x, bullet.y, [bullet.vx, bullet.vy], bullet.angle))
+          this.shells.push(new Shell("Rocket", bullet.id, bullet.playerId, bullet.x, bullet.y, [bullet.vx, bullet.vy], bullet.angle))
         }
       }
 
@@ -91,9 +91,9 @@ class Client {
       for (let i = 0; i < explosions.length; i++) {
         const explosion = explosions[i];
         this.explosions.push(new Explosion(explosion.x, explosion.y))
-        let bulletIndex = this.bullets.findIndex(bullet => bullet.id == explosion.bulletId)
+        let bulletIndex = this.shells.findIndex(bullet => bullet.id == explosion.bulletId)
         console.log(bulletIndex);
-        this.bullets.splice(bulletIndex, 1)
+        this.shells.splice(bulletIndex, 1)
       }
 
       // World state is a list of entity states.
@@ -212,17 +212,20 @@ class Client {
         var dist = Math.sqrt(vx * vx + vy * vy);
         var vx = vx / dist;
         var vy = vy / dist;
-        var angle = -Math.atan2(vx, vy) + 1.5;
+        var angle = Math.atan2(my - y, mx - x);
 
-        this.bulletIndex++
+        var a = angle * 180 / Math.PI
 
-        var bullet = new Bullet("id" + this.bulletIndex, this.playerId, x, y, [vx, vy], angle)
 
-        this.bullets.push(bullet)
+        this.shellIndex++
+
+        var shell = new Shell("Rocket", "id" + this.shellIndex, this.playerId, x, y, [vx, vy], angle)
+
+        this.shells.push(shell)
 
         this.lastFire = performance.now();
 
-        input.bullet = { id: "id" + this.bulletIndex, playerId: player.id, x, y, vx, vy, angle }
+        input.shell = { id: "id" + this.shellIndex, playerId: player.id, x, y, vx, vy, angle, shellType: shell.shellType }
       }
 
       // Process fire end -----------------------------------------------------------------------
@@ -245,8 +248,8 @@ class Client {
     }
 
     // Update all the bullets
-    for (var i = 0; i < this.bullets.length; i++) {
-      var bullet = this.bullets[i];
+    for (var i = 0; i < this.shells.length; i++) {
+      var bullet = this.shells[i];
 
       // bullet.pos[0] += bulletSpeed * dt * (- 1);
       bullet.pos[0] += Settings.rocketSpeed * dt * (bullet.way[0]);
@@ -255,7 +258,7 @@ class Client {
       // Remove the bullet if it goes offscreen
       if (bullet.pos[1] < 0 || bullet.pos[1] > Settings.height ||
         bullet.pos[0] > Settings.width) {
-        this.bullets.splice(i, 1);
+        this.shells.splice(i, 1);
         i--;
       }
     }

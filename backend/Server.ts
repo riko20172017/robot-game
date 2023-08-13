@@ -2,8 +2,9 @@
 import { performance } from 'perf_hooks'
 import Network from "./Network.js";
 import { Entity, Client, IExplosion } from './Interfaces.js';
-import { Bullet } from 'src/Interfaces.js';
-import Settings from '../src/Settings.js'
+import { Shell } from 'src/Interfaces.js';
+import Settings from '../src/Config.js'
+import Config from '../src/Config.js';
 
 // Game state
 
@@ -15,7 +16,7 @@ class Server {
     updateRate: number;
     network: Network;
     update_interval: NodeJS.Timer | undefined
-    bullets: Bullet[]
+    shells: Shell[]
     explosions: IExplosion[]
     lastime: number
     previousTick: number
@@ -27,7 +28,7 @@ class Server {
         this.updateRate = 1000 / 30
         this.network = new Network()
         this.network.init(this)
-        this.bullets = []
+        this.shells = []
         this.explosions = []
         this.lastime = 0
         this.previousTick = Date.now()
@@ -81,7 +82,7 @@ class Server {
     handleInput() {
         // [ dir, playerId, tik, dt ]
         this.network.messages.forEach(message => {
-            let { keys, uid, tik, delta, bullet } = message;
+            let { keys, uid, tik, delta, shell } = message;
 
             var entity = this.getEntity(uid)
 
@@ -92,8 +93,8 @@ class Server {
 
             let dt = playerSpeed * delta;
 
-            if (bullet) {
-                this.bullets.push({ id: bullet.id, playerId: bullet.playerId, x: bullet.x, y: bullet.y, vx: bullet.vx, vy: bullet.vy, angle: bullet.angle })
+            if (shell) {
+                this.shells.push({ id: shell.id, playerId: shell.playerId, x: shell.x, y: shell.y, vx: shell.vx, vy: shell.vy, angle: shell.angle, shellType: shell.shellType })
             }
 
             entity.lastTik = tik
@@ -118,19 +119,16 @@ class Server {
 
     updateEntities(delta: number) {
         // Update all the bullets
-        for (var i = 0; i < this.bullets.length; i++) {
-            var bullet = this.bullets[i];
+        for (var i = 0; i < this.shells.length; i++) {
+            var bullet = this.shells[i];
 
-            // bullet.pos[0] += bulletSpeed * dt * (- 1);
-            // bullet.x += Settings.rocketSpeed * 0.035 * (bullet.vx);
-            // bullet.y += Settings.rocketSpeed * 0.035 * (bullet.vy);
             bullet.x += Settings.rocketSpeed * delta * (bullet.vx);
             bullet.y += Settings.rocketSpeed * delta * (bullet.vy);
 
             // Remove the bullet if it goes offscreen
             if (bullet.x < 0 || bullet.x > 512 ||
                 bullet.y < 0 || bullet.y > 480) {
-                this.bullets.splice(i, 1);
+                this.shells.splice(i, 1);
                 i--;
             }
         }
@@ -141,21 +139,42 @@ class Server {
 
         // Run collision detection for all enemies and bullets
         for (let i = 0; i < this.entities.length; i++) {
-            const entity = this.entities[i];
-            var entitySize = [39, 39];
+            const player = this.entities[i];
+            var playerSize = Config.size.player;
 
-            for (var j = 0; j < this.bullets.length; j++) {
-                let bullet = this.bullets[j];
-                var bulletSize = [18, 8];
+            for (var j = 0; j < this.shells.length; j++) {
+                let shell = this.shells[j];
+                let shellSize;
 
-                if (bullet.playerId !== entity.uid) {
-                    if (this.boxCollides([entity.x, entity.y], entitySize, [bullet.x, bullet.y], bulletSize)) {
+                switch (shell.shellType) {
+                    case "Rocket":
+                        shellSize = Config.size.rocket.server
+                        break;
+
+                    default:
+                        shellSize = [0, 0]
+                        break;
+                }
+
+                if (shell.playerId !== player.uid) {
+                    if (this.boxCollides(
+                        [
+                            player.x - playerSize[0] / 2,
+                            player.y - playerSize[1] / 2
+                        ],
+                        playerSize,
+                        [
+                            shell.x - shellSize[0] / 2,
+                            shell.y - shellSize[1] / 2
+                        ],
+                        shellSize)
+                    ) {
                         // Remove the enemy
                         this.entities.splice(i, 1)
-                        // Add explosion
-                        this.explosions.push({ x: entity.x, y: entity.y, bulletId: bullet.id })
+                        // Add explosion-
+                        this.explosions.push({ x: player.x, y: player.y, bulletId: shell.id })
                         // Remove the bullet and stop this iteration
-                        this.bullets.splice(j, 1);
+                        this.shells.splice(j, 1);
                         break;
                     }
                 }
@@ -183,7 +202,7 @@ class Server {
     }
 
     sendState() {
-        this.network.io.sockets.emit('state', { states: this.entities, bullets: this.bullets, explosions: this.explosions })
+        this.network.io.sockets.emit('state', { states: this.entities, bullets: this.shells, explosions: this.explosions })
         this.explosions = []
     }
 

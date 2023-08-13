@@ -1,5 +1,5 @@
 import { Keys } from "src/Input"
-import { Bullet } from "src/Interfaces"
+import { Shell } from "src/Interfaces"
 
 interface Entity {
     uid: string
@@ -13,7 +13,8 @@ interface Message {
     tik: number
     delta: number
     uid: string,
-    bullet?: Bullet
+    shell?: Shell,
+    shellType: string
 }
 
 interface Client {

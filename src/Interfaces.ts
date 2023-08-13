@@ -11,7 +11,7 @@ interface State {
 
 interface IMessage {
     states: State[]
-    bullets: Bullet[]
+    bullets: Shell[]
     explosions: IExplosion[]
 }
 
@@ -20,14 +20,15 @@ interface IMessage {
 //     entity: State
 // }
 
-type Bullet = {
+type Shell = {
     id: string
     playerId: string
     x: number
     y: number
     vx: number
     vy: number,
-    angle: number
+    angle: number,
+    shellType: string
 }
 
 interface IInput {
@@ -35,7 +36,7 @@ interface IInput {
     delta: number
     uid: string
     keys: Keys,
-    bullet?: Bullet
+    shell?: Shell
 }
 
 
@@ -65,6 +66,6 @@ export {
     ServerToClientEvents,
     ClientToServerEvents,
     Offer,
-    Bullet,
+    Shell,
     IInput,
 }

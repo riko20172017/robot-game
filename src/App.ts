@@ -2,7 +2,7 @@ import Client from "./Client.js";
 import Resources from "./Resources.js";
 import Entity from "./units/Entity.js";
 import { Player } from "./units/Player.js"
-import Settings from "./Settings.js";
+import Settings from "./Config.js";
 
 var isGameOver;
 var gameTime = 0;
@@ -99,7 +99,7 @@ class App {
             this.client.players.forEach((player: Player) => this.renderEntity(player))
         }
 
-        this.renderEntities(this.client.bullets);
+        this.renderEntities(this.client.shells);
         // this.renderEntities(this.client.enemies);
         this.renderEntities(this.client.explosions);
 
@@ -113,11 +113,7 @@ class App {
     }
 
     renderEntity(entity: Entity) {
-        this.ctx.save();
-        this.ctx.translate(entity.pos[0], entity.pos[1]);
-        this.ctx.rotate(entity.dir)
-        entity.sprite.render(this.ctx);
-        this.ctx.restore();
+        entity.render(this.ctx);
     }
 
     renderGUI() {

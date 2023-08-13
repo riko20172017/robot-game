@@ -1,5 +1,5 @@
 import { Keys } from "src/Input.js";
-import Settings from "../Settings.js";
+import Settings from "../Config.js";
 import Sprite from "../Sprite.js";
 import Entity from "./Entity.js"
 

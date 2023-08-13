@@ -15,6 +15,14 @@ abstract class Entity {
     }
 
     changeDirection(dir: string) { }
+    
+    render (ctx: CanvasRenderingContext2D) {
+        ctx.save();
+        ctx.translate(this.pos[0], this.pos[1]);
+        ctx.rotate(this.dir)
+        this.sprite.render(ctx)
+        ctx.restore();
+     }
 }
 
 export default Entity

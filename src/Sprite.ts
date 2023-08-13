@@ -89,13 +89,18 @@ export default class Sprite {
                 break;
         }
 
-        // ctx.translate(-this.size[0]/2, -this.size[1]/2)
 
         ctx.drawImage(window.resources.get(this.url),
             x, y,
             this.size[0], this.size[1],
-            0, 0,
+            -this.size[0] / 2, -this.size[1] / 2,
             this.size[0], this.size[1]);
+        
+        // ctx.beginPath();
+        // ctx.lineWidth = 1;
+        // ctx.strokeStyle = "white";
+        // ctx.rect(-this.size[0] / 2, -this.size[1] / 2, this.size[0], this.size[1]);
+        // ctx.stroke();
     }
 
 }
