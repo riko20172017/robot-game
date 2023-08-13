@@ -1,12 +1,12 @@
 import Network from "./Network.js"
-import Shell from "./units/Shell.js";
+import Shell from "./units/weapons/Shell.js";
 import Entity from "./units/Entity.js";
 import Settings from "./Config.js";
 import { Player } from "./units/Player.js";
-import { Input, Keys } from "./Input.js";
+import { Input } from "./Input.js";
 import { IInput } from "./Interfaces.js";
 import Explosion from "./units/Explosion.js";
-import Sprite from "./Sprite.js";
+import Rocket from "./units/weapons/Rocket.js";
 
 // player id = asdasd
 
@@ -84,16 +84,14 @@ class Client {
       for (let i = 0; i < bullets.length; i++) {
         const bullet = bullets[i];
         if (bullet.playerId !== this.playerId) {
-          this.shells.push(new Shell(
-            "Rocket",
+          this.shells.push(new Rocket(
             bullet.id,
             bullet.playerId,
             bullet.x,
             bullet.y,
             bullet.vx,
             bullet.vy,
-            bullet.angle,
-            new Sprite('img/sprites.png', [0, 39], [18, 6], 10, [0, 0])))
+          ))
         }
       }
 
@@ -102,7 +100,6 @@ class Client {
         const explosion = explosions[i];
         this.explosions.push(new Explosion(explosion.x, explosion.y))
         let bulletIndex = this.shells.findIndex(bullet => bullet.id == explosion.bulletId)
-        console.log(bulletIndex);
         this.shells.splice(bulletIndex, 1)
       }
 
@@ -213,42 +210,21 @@ class Client {
 
       if (keys.SPACE && ((performance.now() - this.lastFire) > Settings.rocketDelay)) {
 
-        //   switch (shellType) {
-        //     case "Rocket":
-        //         this.sprite = new Sprite('img/sprites.png', [0, 39], [18, 6], 10, [0, 0])
-        //         break;
-        //     case "Laser":
-        //         this.sprite = new Sprite('img/sprites.png', [0, 39], [18, 6], 10, [0, 0])
-        //         break;
-        //     default:
-        //         this.sprite = new Sprite('img/sprites.png', [0, 39], [18, 6], 10, [0, 0])
-        //         break;
-        // }
-
         var px = player.x;
         var py = player.y;
         var tx = keys.MOUSE.x;
         var ty = keys.MOUSE.y;
-        var diffx = tx - px;
-        var diffy = ty - py;
-        let distance = Math.sqrt(diffx * diffx + diffy * diffy);
-        let moves = distance / 0.9
-        let dx = diffx / moves;
-        let dy = diffy / moves;
-        let radian = Math.atan2(diffy, diffx);
 
         this.shellIndex++
 
-        let shell = new Shell
-          (
-            "Rocket",
-            this.shellIndex.toString(),
-            this.playerId,
-            px, py,
-            dx, dy,
-            radian,
-            new Sprite('img/sprites.png', [0, 39], [18, 6], 10, [0, 0])
-          )
+        let shell = new Rocket(
+          this.shellIndex.toString(),
+          this.playerId,
+          px, 
+          py,
+          tx, 
+          ty
+        );
 
         this.shells.push(shell)
 
@@ -262,8 +238,8 @@ class Client {
           y: shell.y,
           vx: shell.dx,
           vy: shell.dy,
-          angle: radian,
-          shellType: shell.shellType
+          angle: shell.radian,
+          shellType: shell.type
         }
       }
 
@@ -295,8 +271,8 @@ class Client {
       bullet.y += Settings.rocketSpeed * dt * (bullet.dy);
 
       // Remove the bullet if it goes offscreen
-      if (bullet.x < 0 || bullet.y > Settings.height ||
-        bullet.y > Settings.width) {
+      if (bullet.x < 0 || bullet.y < 0 || bullet.y > Settings.height ||
+        bullet.x > Settings.width) {
         this.shells.splice(i, 1);
         i--;
       }
