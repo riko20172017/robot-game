@@ -39,7 +39,6 @@ class Shell extends Entity {
         if ((dx == 0) && dy == 0) this.init()
     }
     init() {
-        console.log(1);
         var diffx = this.tx - this.x;
         var diffy = this.ty - this.y;
         let distance = Math.sqrt(diffx * diffx + diffy * diffy);

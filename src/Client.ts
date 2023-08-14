@@ -83,7 +83,6 @@ class Client {
       // Add bullets
       for (let i = 0; i < bullets.length; i++) {
         const bullet = bullets[i];
-        console.log(bullets);
         if (bullet.playerId !== this.playerId) {
           this.shells.push(new Rocket(
             bullet.id,
