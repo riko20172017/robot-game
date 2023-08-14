@@ -25,10 +25,12 @@ type Shell = {
     playerId: string
     x: number
     y: number
-    vx: number
-    vy: number,
-    angle: number,
-    shellType: string
+    // tx: number
+    // ty: number,
+    dx: number
+    dy: number,
+    radian: number,
+    type: string
 }
 
 interface IInput {
