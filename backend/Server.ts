@@ -94,7 +94,7 @@ class Server {
             let dt = playerSpeed * delta;
 
             if (shell) {
-                this.shells.push({ id: shell.id, playerId: shell.playerId, x: shell.x, y: shell.y, vx: shell.vx, vy: shell.vy, angle: shell.angle, shellType: shell.shellType })
+                this.shells.push({ id: shell.id, playerId: shell.playerId, x: shell.x, y: shell.y, dx: shell.dx, dy: shell.dy, radian: shell.radian, type: shell.type })
             }
 
             entity.lastTik = tik
@@ -122,8 +122,8 @@ class Server {
         for (var i = 0; i < this.shells.length; i++) {
             var bullet = this.shells[i];
 
-            bullet.x += Settings.rocketSpeed * delta * (bullet.vx);
-            bullet.y += Settings.rocketSpeed * delta * (bullet.vy);
+            bullet.x += Settings.rocketSpeed * delta * (bullet.dx);
+            bullet.y += Settings.rocketSpeed * delta * (bullet.dy);
 
             // Remove the bullet if it goes offscreen
             if (bullet.x < 0 || bullet.x > 512 ||
@@ -146,7 +146,7 @@ class Server {
                 let shell = this.shells[j];
                 let shellSize;
 
-                switch (shell.shellType) {
+                switch (shell.type) {
                     case "Rocket":
                         shellSize = Config.size.rocket.server
                         break;

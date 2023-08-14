@@ -89,8 +89,11 @@ class Client {
             bullet.playerId,
             bullet.x,
             bullet.y,
-            bullet.vx,
-            bullet.vy,
+            0,
+            0,
+            bullet.dx,
+            bullet.dy,
+            bullet.radian
           ))
         }
       }
@@ -210,20 +213,23 @@ class Client {
 
       if (keys.SPACE && ((performance.now() - this.lastFire) > Settings.rocketDelay)) {
 
-        var px = player.x;
-        var py = player.y;
-        var tx = keys.MOUSE.x;
-        var ty = keys.MOUSE.y;
+        let x = player.x;
+        let y = player.y;
+        let tx = keys.MOUSE.x;
+        let ty = keys.MOUSE.y;
 
         this.shellIndex++
 
         let shell = new Rocket(
           this.shellIndex.toString(),
           this.playerId,
-          px, 
-          py,
-          tx, 
-          ty
+          x,
+          y,
+          tx,
+          ty,
+          0,
+          0,
+          0
         );
 
         this.shells.push(shell)
@@ -236,10 +242,10 @@ class Client {
           playerId: shell.playerId,
           x: shell.x,
           y: shell.y,
-          vx: shell.dx,
-          vy: shell.dy,
-          angle: shell.radian,
-          shellType: shell.type
+          dx: shell.dx,
+          dy: shell.dy,
+          radian: shell.radian,
+          type: shell.type
         }
       }
 
