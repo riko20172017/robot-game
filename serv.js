@@ -1,6 +1,6 @@
 import { watch } from 'node:fs';
 import path from 'node:path';
-import { fork } from 'node:child_process';
+import { fork, exec } from 'node:child_process';
 
 var proc = fork(path.join(".\\dist\\backend\\", "Server.js"))
 
