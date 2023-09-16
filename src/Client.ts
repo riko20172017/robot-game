@@ -270,15 +270,12 @@ class Client {
 
     // Update all the bullets
     for (var i = 0; i < this.shells.length; i++) {
-      var bullet = this.shells[i];
+      var shell = this.shells[i];
 
-      // bullet.pos[0] += bulletSpeed * dt * (- 1);
-      bullet.x += Settings.rocketSpeed * dt * (bullet.dx);
-      bullet.y += Settings.rocketSpeed * dt * (bullet.dy);
+      shell.update(dt)
 
       // Remove the bullet if it goes offscreen
-      if (bullet.x < 0 || bullet.y < 0 || bullet.y > Settings.height ||
-        bullet.x > Settings.width) {
+      if (shell.isMoveEnd() || shell.isOutOfScreen()) {
         this.shells.splice(i, 1);
         i--;
       }

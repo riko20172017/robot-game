@@ -3,7 +3,6 @@ import { performance } from 'perf_hooks'
 import Network from "./Network.js";
 import { Entity, Client, IExplosion } from './Interfaces.js';
 import { Shell } from 'src/Interfaces.js';
-import Settings from '../src/Config.js'
 import Config from '../src/Config.js';
 
 // Game state
@@ -122,8 +121,8 @@ class Server {
         for (var i = 0; i < this.shells.length; i++) {
             var bullet = this.shells[i];
 
-            bullet.x += Settings.rocketSpeed * delta * (bullet.dx);
-            bullet.y += Settings.rocketSpeed * delta * (bullet.dy);
+            bullet.x += Config.rocketSpeed * delta * (bullet.dx);
+            bullet.y += Config.rocketSpeed * delta * (bullet.dy);
 
             // Remove the bullet if it goes offscreen
             if (bullet.x < 0 || bullet.x > 512 ||
