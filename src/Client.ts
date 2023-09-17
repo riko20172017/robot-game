@@ -89,11 +89,8 @@ class Client {
             bullet.playerId,
             bullet.x,
             bullet.y,
-            0,
-            0,
-            bullet.dx,
-            bullet.dy,
-            bullet.radian
+            bullet.tx,
+            bullet.ty,
           ))
         }
       }
@@ -220,16 +217,13 @@ class Client {
 
         this.shellIndex++
 
-        let shell = new Rocket(
+        let shell: Rocket = new Rocket(
           this.shellIndex.toString(),
           this.playerId,
           x,
           y,
           tx,
           ty,
-          0,
-          0,
-          0
         );
 
         this.shells.push(shell)
@@ -242,8 +236,8 @@ class Client {
           playerId: shell.playerId,
           x: shell.x,
           y: shell.y,
-          dx: shell.dx,
-          dy: shell.dy,
+          tx: shell.tx,
+          ty: shell.ty,
           radian: shell.radian,
           type: shell.type
         }
@@ -276,6 +270,8 @@ class Client {
 
       // Remove the bullet if it goes offscreen
       if (shell.isMoveEnd() || shell.isOutOfScreen()) {
+        // Add explosions
+        this.explosions.push(new Explosion(shell.x, shell.y))
         this.shells.splice(i, 1);
         i--;
       }

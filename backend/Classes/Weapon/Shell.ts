@@ -1,5 +1,4 @@
-import Config from '../../Config.js';
-import Sprite from "../../Sprite.js";
+import Config from "../../../src/Config.js"
 import Entity from "../Entity.js"
 
 class Shell extends Entity {
@@ -13,7 +12,6 @@ class Shell extends Entity {
     dy: number
     moves: number
     radian: number
-    sprite: Sprite
     distance: number
 
     constructor(
@@ -24,7 +22,6 @@ class Shell extends Entity {
         y: number,
         tx: number,
         ty: number,
-        sprite: Sprite
     ) {
         super(id, x, y)
         this.type = type
@@ -37,12 +34,12 @@ class Shell extends Entity {
         this.dy = 0
         this.moves = 0
         this.distance = 0
-        this.sprite = sprite
         this.radian = 0
 
         this.init()
 
     }
+
     init() {
         var diffx = this.tx - this.x;
         var diffy = this.ty - this.y;

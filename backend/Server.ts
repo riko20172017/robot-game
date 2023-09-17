@@ -2,7 +2,7 @@
 import { performance } from 'perf_hooks'
 import Network from "./Network.js";
 import { Entity, Client, IExplosion } from './Interfaces.js';
-import { Shell } from 'src/Interfaces.js';
+import Shell from './Classes/Weapon/Shell.js'
 import Config from '../src/Config.js';
 
 // Game state
@@ -45,7 +45,6 @@ class Server {
 
             this.update(delta)
 
-            // console.log('delta', delta, '(target: ' + this.updateRate +' ms)', 'node ticks', this.actualTicks)
             this.actualTicks = 0
         }
 
@@ -54,12 +53,6 @@ class Server {
         } else {
             setImmediate((function (self) { return function () { self.setUpdateRate() } })(this))
         }
-
-
-        // clearInterval(this.update_interval);
-        // this.update_interval = setInterval(
-        //     (function (self) { return function () { self.update(); }; })(this),
-        //     1000 / this.update_rate);
     }
 
     update(delta: number) {
@@ -67,14 +60,6 @@ class Server {
         this.updateEntities(delta)
         this.checkCollisions();
         this.sendState();
-
-        // var now = performance.now();
-
-        // var currentFps = Math.round(1000 / (now - this.lastime));
-
-        // this.lastime = performance.now();
-        // console.log(currentFps);
-
     }
 
 
@@ -93,7 +78,18 @@ class Server {
             let dt = playerSpeed * delta;
 
             if (shell) {
-                this.shells.push({ id: shell.id, playerId: shell.playerId, x: shell.x, y: shell.y, dx: shell.dx, dy: shell.dy, radian: shell.radian, type: shell.type })
+                this.shells.push(
+                    new Shell
+                        (
+                            shell.id,
+                            "rocket",
+                            shell.playerId,
+                            shell.x,
+                            shell.y,
+                            shell.tx,
+                            shell.ty
+                        )
+                )
             }
 
             entity.lastTik = tik
@@ -119,14 +115,12 @@ class Server {
     updateEntities(delta: number) {
         // Update all the bullets
         for (var i = 0; i < this.shells.length; i++) {
-            var bullet = this.shells[i];
+            var shell: Shell = this.shells[i];
 
-            bullet.x += Config.rocketSpeed * delta * (bullet.dx);
-            bullet.y += Config.rocketSpeed * delta * (bullet.dy);
+            shell.update(delta)
 
             // Remove the bullet if it goes offscreen
-            if (bullet.x < 0 || bullet.x > 512 ||
-                bullet.y < 0 || bullet.y > 480) {
+            if (shell.isMoveEnd() || shell.isOutOfScreen()) {
                 this.shells.splice(i, 1);
                 i--;
             }
@@ -134,8 +128,6 @@ class Server {
     }
 
     checkCollisions() {
-        // this.checkPlayerBounds();
-
         // Run collision detection for all enemies and bullets
         for (let i = 0; i < this.entities.length; i++) {
             const player = this.entities[i];
@@ -211,20 +203,5 @@ class Server {
 }
 
 new Server()
-
-// function getPlayerId(socketId) {
-//     for (const key in players) {
-//         if (Object.hasOwnProperty.call(players, key)) {
-//             const player = players[key];
-//             if (player.socketId == socketId) return key
-//         }
-//     }
-
-//     throw "Player not exist"
-// }
-
-// function getEntities(playerId) {
-//     return players.find(player => player.id == playerId)
-// }
 
 export default Server

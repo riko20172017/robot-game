@@ -25,10 +25,8 @@ type Shell = {
     playerId: string
     x: number
     y: number
-    // tx: number
-    // ty: number,
-    dx: number
-    dy: number,
+    tx: number
+    ty: number,
     radian: number,
     type: string
 }
