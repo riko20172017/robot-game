@@ -40,10 +40,10 @@ class App {
         this.isGameOver = false
 
         this.resources.load([
-            'img/sprites.png',
-            'img/terrain.png',
-            'img/player.png',
-            'img/playerTest.png',
+            'public/img/sprites.png',
+            'public/img/terrain.png',
+            'public/img/player.png',
+            'public/img/playerTest.png',
         ]);
 
         this.resources.onReady(() => this.init());
