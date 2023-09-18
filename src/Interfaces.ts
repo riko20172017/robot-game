@@ -49,15 +49,31 @@ interface Offer {
     uid: string
 }
 
+interface Discover {
+    uid: string
+}
+
+interface JoinCS {
+    uid: string
+}
+
+interface JoinSC {
+    x: number,
+    y: number
+}
+
 interface ServerToClientEvents {
     noArg: () => void;
     OFFER: (data: Offer) => void;
     state: (data: IMessage) => void;
+    DISCOVER: (data: Discover) => void
+    JOIN: (data: JoinSC) => void
 }
 
 interface ClientToServerEvents {
     DISCOVER: () => void
     movement: (data: IInput) => void;
+    JOIN: (data: JoinCS) => void;
 }
 
 export {
@@ -68,4 +84,5 @@ export {
     Offer,
     Shell,
     IInput,
+    Discover, JoinCS, JoinSC
 }

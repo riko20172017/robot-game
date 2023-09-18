@@ -17,7 +17,7 @@ class Rocket extends Shell {
             playerId, 
             x, y, 
             tx, ty,
-            new Sprite('img/sprites.png', [0, 39], [18, 6], 10, [0, 0]))
+            new Sprite('public/img/sprites.png', [0, 39], [18, 6], 10, [0, 0]))
     }
 
 

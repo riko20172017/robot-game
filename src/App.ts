@@ -52,7 +52,7 @@ class App {
     init() {
         this.canvas.width = Settings.width;
         this.canvas.height = Settings.height;
-        this.terrainPattern = this.ctx.createPattern(this.resources.get('img/terrain.png'), 'repeat')
+        this.terrainPattern = this.ctx.createPattern(this.resources.get('public/img/terrain.png'), 'repeat')
         document.body.appendChild(this.canvas);
 
 

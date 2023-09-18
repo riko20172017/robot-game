@@ -89,13 +89,12 @@ export default class Sprite {
                 break;
         }
 
-
         ctx.drawImage(window.resources.get(this.url),
             x, y,
             this.size[0], this.size[1],
             -this.size[0] / 2, -this.size[1] / 2,
             this.size[0], this.size[1]);
-        
+
         // ctx.beginPath();
         // ctx.lineWidth = 1;
         // ctx.strokeStyle = "white";

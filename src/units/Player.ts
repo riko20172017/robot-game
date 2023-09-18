@@ -10,7 +10,7 @@ class Player extends Entity {
     constructor(id: string, x: number, y: number) {
         super(id, x, y)
         this.id = id;
-        this.sprite = new Sprite('img/player.png', [0, 0], [40, 40], 16, [0, 1])
+        this.sprite = new Sprite('public/img/player.png', [0, 0], [40, 40], 16, [0, 1])
         this.speed = Settings.playerSpeed
         this.position_buffer = []
 

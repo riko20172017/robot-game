@@ -17,19 +17,21 @@ class Network {
         let network = this;
         this.io.on('connection', function (socket) {
 
-            socket.on('DISCOVER', function (data) {
+            socket.on('DISCOVER', function () {
                 let uid = uidd()
                 let socketId = socket.id
-
-                socket.emit('OFFER', {uid})
-
+                socket.emit('DISCOVER', { uid })
                 server.clients.push({ socketId, uid })
+            })
+
+            socket.on('JOIN', function (data) {
                 server.entities.push({
-                    uid,
+                    uid: data.uid,
                     x: randomInteger(10, 500),
                     y: randomInteger(10, 400),
                     lastTik: 0
                 })
+                socket.emit("JOIN")
             })
 
             socket.on('movement', function (data) {
@@ -38,7 +40,7 @@ class Network {
 
             socket.on('disconnect', function (data) {
                 var client = server.clients.find(({ socketId }) => socketId == socket.id)
-                
+
                 if (client === undefined) {
                     console.log("can`t disconnect: client is undefined");
                     return
