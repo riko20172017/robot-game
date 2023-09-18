@@ -77,20 +77,20 @@ class Client {
       if (!message) break; /*⛔*/
 
       let states = message.states
-      let bullets = message.bullets
+      let shells = message.bullets
       let explosions = message.explosions
 
       // Add bullets
-      for (let i = 0; i < bullets.length; i++) {
-        const bullet = bullets[i];
-        if (bullet.playerId !== this.playerId) {
+      for (let i = 0; i < shells.length; i++) {
+        const shell = shells[i];
+        if (shell.playerId !== this.playerId) {
           this.shells.push(new Rocket(
-            bullet.id,
-            bullet.playerId,
-            bullet.x,
-            bullet.y,
-            bullet.tx,
-            bullet.ty,
+            shell.id,
+            shell.playerId,
+            shell.x,
+            shell.y,
+            shell.tx,
+            shell.ty,
           ))
         }
       }
